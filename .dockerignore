@@ -1,0 +1,7 @@
+.git
+docs
+*.md
+!addons/**
+mise.toml
+odooly.ini
+**/__pycache__
