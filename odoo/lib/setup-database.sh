@@ -7,7 +7,8 @@ source "${LIB_DIR}/common.sh"
 
 wait_for_db() {
   log "Waiting for database to be ready..."
-  local timeout=60
+  # Postgres can start later than Odoo in the cluster, e.g. while its image is pulled
+  local timeout=300
   until pg_isready -q -d postgres; do
     timeout=$((timeout - 2))
     if [ "$timeout" -le 0 ]; then

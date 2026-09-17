@@ -5,3 +5,5 @@ docs
 mise.toml
 odooly.ini
 **/__pycache__
+k8s
+.k8s

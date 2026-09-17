@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: oodev
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: oodev
+resources:
+  - namespace.yaml
+  - quota.yaml
+  - db.yaml
+  - odoo.yaml
+  - ingress.yaml
+  - networkpolicy.yaml
+configMapGenerator:
+  - name: odoo-config
+    envs: [config.env]
+secretGenerator:
+  - name: odoo-secret
+    envs: [secret.env]

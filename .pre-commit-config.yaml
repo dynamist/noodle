@@ -54,3 +54,12 @@ repos:
       - id: yamllint
         name: lint YAML
         args: ["-d {rules: {line-length: disable}}", "-s"]
+
+  - repo: local
+    hooks:
+      - id: kubeconform
+        name: validate k8s manifests (kubeconform)
+        entry: make validate
+        language: system
+        files: ^k8s/
+        pass_filenames: false

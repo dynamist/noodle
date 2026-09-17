@@ -2,10 +2,13 @@
 # The pipx backend installs with `uv tool install`
 uv = "0.12.15"
 "pipx:odooly" = "2.6.6"
+k3d = "5.9.0"
+kubectl = "1.36.4"
+kubeconform = "0.8.0"
 
 [env]
-# Connection details of the local Odoo, same defaults as compose.yml
-ODOO_URL = "http://odoo.localhost:8069"
+# Connection details of the local Odoo, same defaults as k8s/base
+ODOO_URL = "http://odoo.localhost"
 ODOO_DB = "odoo"
 ODOO_USER = "admin"
 ODOO_PASSWORD = "supersecr3tpassw0rdfordevelop1"

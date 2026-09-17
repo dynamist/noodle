@@ -8,22 +8,24 @@ tools against Odoo.
 **1. Start Odoo:**
 
 ```bash
+mise trust && make tools   # k3d, kubectl and odooly, pinned in mise.toml
 make up
 ```
 
-The Makefile detects whether you have podman or docker installed (preferring
-podman). It starts PostgreSQL in the background and Odoo in the foreground, so
-you can see the logs and the credentials summary printed when Odoo is ready.
+`make up` creates the shared k3d cluster `dynamist-dev` (or reuses it), builds
+the `dynamist/odoo` image, imports it into the cluster, deploys
+`k8s/overlays/local` into the namespace `oodev` and follows the logs until
+Odoo is ready. See [Kubernetes Setup](#kubernetes-setup).
 
 The first start creates the database and installs the apps with demo data,
 which takes a few minutes. Later starts only check the modules and the seeded
-data, and are up in about 10 seconds.
+data.
 
-**2. Open Odoo:** <http://odoo.localhost:8069>, log in as `admin` with the password
+**2. Open Odoo:** <http://odoo.localhost>, log in as `admin` with the password
 `supersecr3tpassw0rdfordevelop1`.
 
-**3. Stop Odoo:** When you are done, press `Ctrl+C`, then run `make down` to
-remove the containers. The data is kept, `make reset` deletes it.
+**3. Stop Odoo:** `make down` stops Odoo and PostgreSQL and keeps the data,
+`make reset` deletes the `oodev` namespace with all its data.
 
 ## What Gets Created
 
@@ -81,38 +83,39 @@ records come from the datasets in `odoo/seed/datasets/`, see
 
 ## Configuration
 
-All settings can be customized via environment variables. Defaults are in
-`compose.yml` and can be overridden from the command line:
+The settings are in `k8s/base/config.env` and, for credentials,
+`k8s/base/secret.env`. To override settings locally, put them in the
+gitignored `k8s/overlays/local/config.local.env` and run `make up`:
 
 ```bash
-ODOO_PORT=8070 make up
-ODOO_MODULES=contacts,sale_management,dynamist_foo make up
+echo ODOO_MODULES=contacts,sale_management,dynamist_foo >> k8s/overlays/local/config.local.env
+make up
 ```
 
-### Environment Variables
+### Settings
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `ODOO_PORT` | `8069` | Port on loopback (127.0.0.1 and ::1) for Odoo |
-| `ODOO_URL` | `http://odoo.localhost:8069` | Base URL (`web.base.url`) |
-| `ODOO_DB` | `odoo` | Database name |
+| `ODOO_URL` | `http://odoo.localhost` | Base URL (`web.base.url`) |
+| `PGDATABASE` | `odoo` | Database name |
 | `ODOO_USER` | `admin` | Admin login |
-| `ODOO_PASSWORD` | `supersecr3tpassw0rdfordevelop1` | Admin password |
-| `ODOO_API_KEY` | `odoo-supersecr3tapikeyfordevelop1` | Admin API key |
-| `ODOO_USERS_PASSWORD` | `supersecr3tpassw0rdfordevelop1` | Password of the test users |
-| `ODOO_MASTER_PASSWORD` | `supersecr3tmasterpassw0rdfordevelop1` | Master password (database manager) |
+| `ODOO_PASSWORD` | `supersecr3tpassw0rdfordevelop1` | Admin password (secret) |
+| `ODOO_API_KEY` | `odoo-supersecr3tapikeyfordevelop1` | Admin API key (secret) |
+| `ODOO_USERS_PASSWORD` | `supersecr3tpassw0rdfordevelop1` | Password of the test users (secret) |
+| `ODOO_ADMIN_PASSWD` | `supersecr3tmasterpassw0rdfordevelop1` | Master password, database manager (secret) |
 | `ODOO_MODULES` | `contacts,crm,sale_management,account,stock,project,hr` | Modules to install |
 | `ODOO_DEMO_DATA` | `true` | Load demo data when the database is created |
-| `POSTGRES_PORT` | `5432` | Port on 127.0.0.1 for PostgreSQL |
-| `POSTGRES_USER` | `odoo` | PostgreSQL user |
-| `POSTGRES_PASSWORD` | `supersecr3tpassw0rdfordatabase1` | PostgreSQL password |
+| `PGUSER` / `POSTGRES_USER` | `odoo` | PostgreSQL user (secret) |
+| `PGPASSWORD` / `POSTGRES_PASSWORD` | `supersecr3tpassw0rdfordatabase1` | PostgreSQL password (secret) |
 
 `ODOO_DEMO_DATA` only has an effect when the database is created, run
 `make reset` after changing it.
 
 Odoo 19 reads every config file option from an `ODOO_<OPTION>` environment
 variable, for example `ODOO_WITH_DEMO` or `ODOO_LIST_DB`. Do not add variables
-with such names to the Odoo container unless you mean to set that option.
+with such names to the Odoo pod unless you mean to set that option. For the
+same reason the pods set `enableServiceLinks: false`, otherwise Kubernetes
+would inject `ODOO_PORT` and similar variables for the `odoo` Service.
 
 ### Custom Modules
 
@@ -123,7 +126,7 @@ on every start. To update an installed module after changing it:
 
 ```bash
 make shell
-odoo -d odoo -u dynamist_foo --stop-after-init --no-http
+odoo -d odoo -u dynamist_foo --stop-after-init --no-http --db_host db
 ```
 
 Until `addons/` contains a module, Odoo logs a warning that
@@ -169,8 +172,9 @@ make seed STEPS=sample DATASETS=crm   # Odoo ORM in the container, as on every s
 make sample DATASETS=crm              # odooly over JSON-2 from the host (ODOOLY_ENV=dev)
 ```
 
-`odoo/seed` is mounted into the container, so `make seed` uses your edits
-without a rebuild. Seeding in the container runs in one transaction, while
+`make seed` copies `odoo/seed` from your checkout into the running pod, so it
+uses your edits without a rebuild. Restarts use the copy in the image, run
+`make up` to build your edits into it. Seeding in the container runs in one transaction, while
 `make sample` commits every call on its own: after a failure, fix it and run
 it again.
 
@@ -188,14 +192,14 @@ XML-RPC and JSON-RPC are deprecated and are planned to be removed in Odoo 22.
 arguments:
 
 ```bash
-curl -s http://odoo.localhost:8069/json/2/res.partner/search_read \
+curl -s http://odoo.localhost/json/2/res.partner/search_read \
   -H "Authorization: bearer odoo-supersecr3tapikeyfordevelop1" \
   -H "X-Odoo-Database: odoo" \
   -H "Content-Type: application/json" \
   -d '{"domain": [["is_company", "=", true]], "fields": ["name"], "limit": 3}'
 ```
 
-The API documentation of the instance is at <http://odoo.localhost:8069/doc>
+The API documentation of the instance is at <http://odoo.localhost/doc>
 (log in first).
 
 **XML-RPC**, with the API key in place of the password:
@@ -203,7 +207,7 @@ The API documentation of the instance is at <http://odoo.localhost:8069/doc>
 ```python
 from xmlrpc.client import ServerProxy
 
-url, db, key = "http://odoo.localhost:8069", "odoo", "odoo-supersecr3tapikeyfordevelop1"
+url, db, key = "http://odoo.localhost", "odoo", "odoo-supersecr3tapikeyfordevelop1"
 uid = ServerProxy(f"{url}/xmlrpc/2/common").authenticate(db, "admin", key, {})
 models = ServerProxy(f"{url}/xmlrpc/2/object")
 print(models.execute_kw(db, uid, key, "res.partner", "search_count", [[]]))
@@ -212,7 +216,7 @@ print(models.execute_kw(db, uid, key, "res.partner", "search_count", [[]]))
 **JSON-RPC:**
 
 ```bash
-curl -s http://odoo.localhost:8069/jsonrpc -H "Content-Type: application/json" -d '{
+curl -s http://odoo.localhost/jsonrpc -H "Content-Type: application/json" -d '{
   "jsonrpc": "2.0", "method": "call",
   "params": {"service": "object", "method": "execute_kw",
              "args": ["odoo", 2, "odoo-supersecr3tapikeyfordevelop1", "res.partner", "search_count", [[]]]}}'
@@ -269,48 +273,107 @@ the fixed keys into `res_users_apikeys` itself, hashed the same way as Odoo
 does it. The failed login cooldown (`base.login_cooldown_after`) is turned off
 so tools under development are not locked out.
 
+## Kubernetes Setup
+
+oodev runs in a local [k3d](https://k3d.io) cluster, which is k3s in Docker.
+The cluster can be shared with other Dynamist dev apps, and each app keeps to
+its own namespace:
+
+- **Cluster:** `k8s/cluster/k3d.yaml`, identical in every repo that uses it.
+  It pins the k3s version and publishes the bundled Traefik ingress on
+  `127.0.0.1:80` and `:443`. Whichever app starts first creates the cluster,
+  the others reuse it.
+- **Routing:** each app has a standard `Ingress` with its own hostnames, here
+  `odoo.localhost` to the `odoo` Service. Names under `.localhost` resolve to
+  loopback, no `/etc/hosts` entry is needed.
+- **oodev:** `k8s/base` holds the `oodev` namespace, PostgreSQL (StatefulSet
+  `db`), Odoo (Deployment `odoo`, `Recreate` so two pods never initialize the
+  same database), the Ingress, a ResourceQuota with default limits and
+  NetworkPolicies. Only Traefik reaches Odoo and only Odoo reaches PostgreSQL.
+  Overlays: `local` (with `config.local.env`) and `ci`.
+- **Images:** `make odoo-image` builds `dynamist/odoo`, tags it by content and
+  imports it with `k3d image import`, no registry is involved.
+
+Every `make` target passes `--context k3d-dynamist-dev`, so it never acts on
+another cluster.
+
 ## Useful Commands
 
 ```bash
-make up                         # start odoo (postgres detached, odoo in foreground)
-make down                       # stop and remove containers, keep data
-make reset                      # stop and delete all data
-make logs                       # follow logs
+make up                         # create/reuse cluster, build, deploy, follow logs
+make down                       # stop odoo and postgres, keep data
+make reset                      # delete the oodev namespace and its data
+make destroy                    # delete the whole cluster (FORCE=1 if other apps run)
+make logs / make ps             # follow odoo logs / show pods, ingress, volumes
 make creds                      # print credentials
-make seed                       # re-run all seed steps
+make seed                       # copy odoo/seed into the pod and re-run all seed steps
 make seed STEPS=users,apikeys   # re-run some seed steps
 make sample DATASETS=crm        # load sample datasets through the API with odooly
-make shell                      # bash in the odoo container
+make shell                      # bash in the odoo pod
 make odoo-shell                 # Odoo Python shell with env
 make psql                       # psql on the odoo database
+make db-forward                 # PostgreSQL on 127.0.0.1:5432 until Ctrl+C (POSTGRES_PORT=5433)
 make console                    # odooly console
+make validate                   # validate the rendered manifests with kubeconform
+make test-k8s                   # run tests/k8s against the deployed odoo
 ```
 
-## Troubleshooting
+## Testing
 
-**Port already in use:** another service uses 8069 or 5432. Start with
-`ODOO_PORT=8070 POSTGRES_PORT=5433 make up`, and set `ODOO_URL` to match.
+`tests/k8s` runs against the deployed instance and needs no Python project,
+`make test-k8s` runs it with `uv run --with`:
+
+- **Smoke:** health, login page, admin API key, WebSocket upgrade through
+  Traefik, unknown hosts get a 404.
+- **Seed data:** test users with their groups, API keys (none for the portal
+  user), sample records, access rules (Astrid sees fewer leads than Johan) and
+  that seeding again creates nothing (marked `slow`).
+- **Isolation:** pods in other namespaces cannot reach Odoo or PostgreSQL,
+  containers have requests and memory limits, the namespace has a quota and
+  the manifests create nothing cluster-wide except the namespace.
+
+```bash
+make test-k8s PYTEST_ARGS="-m 'not slow'"
+```
+
+CI (`.github/workflows/k8s.yml`) validates the manifests, then creates a k3d
+cluster on the runner and runs `make ci-deploy` (the `ci` overlay) and
+`make ci-test` (`make test-k8s` and `make sample`). A coexistence job deploys the
+apps listed in the repository variable `COEXISTENCE_REPOS` (space separated
+`owner/name`) into the same cluster and runs every app's tests, which also
+checks that the apps cannot reach each other and that all repos pin the same
+`k8s/cluster/k3d.yaml`. Each of those repos must provide the make targets
+`ci-deploy` and `ci-test`.
+
+## Troubleshooting
 
 **`401 Invalid apikey`:** check the key and the `X-Odoo-Database` header, and
 check that the seeding in `make logs` finished. Re-run it with
 `make seed STEPS=apikeys`.
 
-**The container exits during start:** the init script stops on any error, the
-reason is at the end of `make logs`. An interrupted first start is detected
-and the database is recreated on the next `make up`.
+**The pod restarts during start:** the init script stops on any error, the
+reason is in `make logs` (add `--previous` with `kubectl logs` for the last
+attempt). An interrupted first start is detected and the database is
+recreated on the next start.
 
 **After bumping the Odoo image** in `Dockerfile`: run `make reset`, or update
-all modules with `odoo -d odoo -u all --stop-after-init --no-http` from
-`make shell`.
+all modules with `odoo -d odoo -u all --stop-after-init --no-http --db_host db`
+from `make shell`.
+
+**Cluster version warning:** `make up` warns when the running cluster uses a
+different k3s version than `k8s/cluster/k3d.yaml`. Recreate it with
+`make destroy` (this deletes the data of every app in it).
 
 ## Data Persistence
 
-The database and the filestore are in the volumes `oodev_db-data` and
-`oodev_odoo-data`. `make down` keeps them, `make reset` deletes them and the
-next `make up` starts from scratch.
+The database and the filestore are PersistentVolumeClaims in the `oodev`
+namespace, stored by k3s's `local-path` provisioner inside the cluster's
+Docker container. `make down` and restarting Docker keep them, `make reset`
+deletes them and `make destroy` deletes them along with the cluster.
 
 ## Security Note
 
 This setup is for local development only. The credentials are public, list
 the database manager and turn off the login cooldown. The ports are bound to
 loopback, do not expose them or use this configuration in production.
+PostgreSQL is not published at all, use `make db-forward`.

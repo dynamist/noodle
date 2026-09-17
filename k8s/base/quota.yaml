@@ -1,0 +1,26 @@
+# Keeps oodev from starving other apps in the shared cluster
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: oodev
+spec:
+  hard:
+    pods: "10"
+    requests.cpu: "4"
+    requests.memory: 6Gi
+    limits.memory: 8Gi
+    persistentvolumeclaims: "5"
+    requests.storage: 30Gi
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: oodev
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      default:
+        memory: 512Mi

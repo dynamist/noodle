@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: odoo
+spec:
+  selector:
+    app.kubernetes.io/name: odoo
+  ports:
+    - name: http
+      port: 8069
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: odoo-data
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odoo
+spec:
+  replicas: 1
+  # The default of 10 minutes is too short, the first start installs all apps with demo data
+  progressDeadlineSeconds: 3600
+  # Never run two pods at once, both would initialize the same database
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: odoo
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: odoo
+    spec:
+      # Service links would inject ODOO_PORT and friends, and Odoo reads
+      # ODOO_<OPTION> env vars as config options
+      enableServiceLinks: false
+      containers:
+        - name: odoo
+          image: dynamist/odoo
+          envFrom:
+            - configMapRef:
+                name: odoo-config
+            - secretRef:
+                name: odoo-secret
+          ports:
+            - name: http
+              containerPort: 8069
+          # The first start installs all apps with demo data before Odoo listens
+          startupProbe:
+            httpGet:
+              path: /web/health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 240
+          readinessProbe:
+            httpGet:
+              path: /web/health
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /web/health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              memory: 3Gi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/odoo
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: odoo-data
