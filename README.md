@@ -1,4 +1,4 @@
-# odoo-dev
+# oodev
 
 A disposable local Odoo 19 server with sample data and well-known credentials,
 for developing tools against Odoo (JSON-2, XML-RPC and JSON-RPC clients,

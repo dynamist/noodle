@@ -52,10 +52,10 @@ ps: check-runtime ## show odoo container status
 	$(COMPOSE) ps
 
 creds: check-runtime ## print credentials of the running odoo
-	@$(COMPOSE) exec odoo /opt/odoo-dev/lib/banner.sh
+	@$(COMPOSE) exec odoo /opt/oodev/lib/banner.sh
 
 seed: check-runtime ## re-run seeding in the running odoo (STEPS=users,apikeys to limit)
-	$(COMPOSE) exec -e SEED_STEPS=$(STEPS) odoo /opt/odoo-dev/init-odoo.sh --seed-only
+	$(COMPOSE) exec -e SEED_STEPS=$(STEPS) odoo /opt/oodev/init-odoo.sh --seed-only
 
 ##@ Shells
 

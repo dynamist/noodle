@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents when working with code in this r
 
 ## Project Overview
 
-odoo-dev runs a disposable local Odoo 19 server (image `dynamist/odoo`) with demo data, test users and fixed
+oodev runs a disposable local Odoo 19 server (image `dynamist/odoo`) with demo data, test users and fixed
 credentials, for developing tools against Odoo. There is no application code, only the container setup, the init and
 seed scripts, and custom modules in `addons/`.
 
@@ -62,7 +62,7 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 - Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`), default branch `master`
 - Init and seed steps must be idempotent (check, then create or update) since they run on every start. Shell modules
   in `odoo/lib/` must also run on their own.
-- Sample records use `ensure_record()` with `__odoo_dev__.<name>` xmlids and are only created when missing
+- Sample records use `ensure_record()` with `__oodev__.<name>` xmlids and are only created when missing
 - Keep `compose.yml`, `odoo/lib/common.sh`, `mise.toml`, `odooly.ini` and the docs in sync when changing credentials
 
 ## Odoo 19 Gotchas

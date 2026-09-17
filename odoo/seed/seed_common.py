@@ -2,7 +2,7 @@
 
 import os
 
-XMLID_MODULE = "__odoo_dev__"
+XMLID_MODULE = "__oodev__"
 
 # Groups given to each test user role, on top of base.group_user for internal roles
 ROLES = {
@@ -26,13 +26,13 @@ def cfg(name):
 
 
 def log(message):
-    print(f"[odoo-dev]   {message}", flush=True)
+    print(f"[oodev]   {message}", flush=True)
 
 
 def test_users():
-    """Return (login, name, role) tuples from ODOO_DEV_TEST_USERS (set by lib/common.sh)."""
+    """Return (login, name, role) tuples from OODEV_TEST_USERS (set by lib/common.sh)."""
     users = []
-    for line in os.environ.get("ODOO_DEV_TEST_USERS", "").splitlines():
+    for line in os.environ.get("OODEV_TEST_USERS", "").splitlines():
         if line.strip():
             login, name, role = line.split(":")
             users.append((login, name, role))
@@ -74,7 +74,7 @@ def refs(env, xmlids):
 
 
 def ensure_record(env, name, model, vals):
-    """Create a record tracked by the xmlid __odoo_dev__.<name> unless it exists.
+    """Create a record tracked by the xmlid __oodev__.<name> unless it exists.
 
     Existing records are left alone, so changes made while developing survive
     restarts. Delete a record to have it recreated on the next start.

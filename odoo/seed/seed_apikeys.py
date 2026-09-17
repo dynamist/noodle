@@ -7,7 +7,7 @@ the same way as res.users.apikeys._generate() does it.
 from odoo.addons.base.models.res_users import INDEX_SIZE, KEY_CRYPT_CONTEXT, _check_apikey_credentials
 from seed_common import cfg, find_user, log, test_users, user_api_key
 
-KEY_NAME = "odoo-dev fixed development key"
+KEY_NAME = "oodev fixed development key"
 
 
 def ensure_key(env, user, key):

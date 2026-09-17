@@ -68,11 +68,11 @@ Internal test users also get an employee record.
 A few records on top of the demo data, owned by the test users:
 
 - **Exempel AB**, a customer company with Olof Nyström as its contact
-- **odoo-dev Consulting Hour**, a service product
+- **oodev Consulting Hour**, a service product
 - Two opportunities for Exempel AB, one owned by Astrid (sales user) and one by
   Johan (sales administrator), so Astrid sees fewer leads than Johan
 - A quotation for Exempel AB, visible to the portal user
-- The project **odoo-dev Sandbox** with three tasks assigned to Per
+- The project **oodev Sandbox** with three tasks assigned to Per
 
 Sample records are only created when they are missing, so changes you make
 survive restarts. Delete a record to get it back on the next start.
@@ -251,8 +251,8 @@ all modules with `odoo -d odoo -u all --stop-after-init --no-http` from
 
 ## Data Persistence
 
-The database and the filestore are in the volumes `odoo-dev_db-data` and
-`odoo-dev_odoo-data`. `make down` keeps them, `make reset` deletes them and the
+The database and the filestore are in the volumes `oodev_db-data` and
+`oodev_odoo-data`. `make down` keeps them, `make reset` deletes them and the
 next `make up` starts from scratch.
 
 ## Security Note

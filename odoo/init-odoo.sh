@@ -38,6 +38,6 @@ fi
 # Step 2: Seed admin credentials, test users, API keys and sample records.
 # Every step is idempotent, so this runs on every start.
 log "Seeding steps: ${SEED_STEPS:-all}"
-odoo shell -d "$PGDATABASE" --no-http --log-level=warn < "${ODOO_DEV_SEED_DIR}/run.py"
+odoo shell -d "$PGDATABASE" --no-http --log-level=warn < "${OODEV_SEED_DIR}/run.py"
 
 log "Initialization done!"

@@ -35,7 +35,7 @@ def run(env):
             env,
             "product_consulting_hour",
             "product.product",
-            {"name": "odoo-dev Consulting Hour", "type": "service", "list_price": 1200.0},
+            {"name": "oodev Consulting Hour", "type": "service", "list_price": 1200.0},
         )
 
     if "crm.lead" in env:
@@ -81,7 +81,7 @@ def run(env):
             env,
             "project_sandbox",
             "project.project",
-            {"name": "odoo-dev Sandbox", "user_id": project_manager.id, "partner_id": customer.id},
+            {"name": "oodev Sandbox", "user_id": project_manager.id, "partner_id": customer.id},
         )
         for number, task_name in enumerate(["Set up API access", "Write import script", "Review access rules"], 1):
             ensure_record(
