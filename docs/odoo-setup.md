@@ -75,7 +75,9 @@ A few records on top of the demo data, owned by the test users:
 - The project **oodev Sandbox** with three tasks assigned to Per
 
 Sample records are only created when they are missing, so changes you make
-survive restarts. Delete a record to get it back on the next start.
+survive restarts. Delete a record to get it back on the next start. The
+records come from the datasets in `odoo/seed/datasets/`, see
+[Adding Sample Data](#adding-sample-data).
 
 ## Configuration
 
@@ -126,6 +128,56 @@ odoo -d odoo -u dynamist_foo --stop-after-init --no-http
 
 Until `addons/` contains a module, Odoo logs a warning that
 `/mnt/dynamist-addons` is not a valid addons directory. It is harmless.
+
+### Adding Sample Data
+
+Sample data is split into datasets, one Python file per dataset in
+`odoo/seed/datasets/`. Every file there is picked up automatically:
+
+```python
+# odoo/seed/datasets/crm.py
+from seed_datasets import dataset, ensure_record, ref, user
+
+
+@dataset(modules=["crm"], after=["partners"])
+def crm(env):
+    ensure_record(env, "lead_astrid", "crm.lead", {
+        "name": "Exempel AB: tooling workshop",
+        "type": "opportunity",
+        "partner_id": ref(env, "partner_exempel").id,
+        "user_id": user(env, "astrid.lindqvist").id,
+    })
+```
+
+- `@dataset(modules=..., after=...)` registers the function as a dataset with
+  its name. It is skipped when one of `modules` is not installed, and so is
+  every dataset that builds on it.
+- `after` lists the datasets it builds on. They run first, and selecting a
+  dataset with `DATASETS=` selects them too.
+- `ensure_record(env, name, model, vals)` creates a record with the xmlid
+  `__oodev__.<name>` unless it exists, and returns it.
+- `ref(env, name)` returns the record of `__oodev__.<name>`, or of a full
+  xmlid such as `base.se`.
+- `user(env, login)` returns a test user.
+- `Command.create/link/clear/set` build x2many values, and `id_of(record.field)`
+  reads the id of a many2one that may be empty.
+
+The same datasets run in two ways:
+
+```bash
+make seed STEPS=sample DATASETS=crm   # Odoo ORM in the container, as on every start
+make sample DATASETS=crm              # odooly over JSON-2 from the host (ODOOLY_ENV=dev)
+```
+
+`odoo/seed` is mounted into the container, so `make seed` uses your edits
+without a rebuild. Seeding in the container runs in one transaction, while
+`make sample` commits every call on its own: after a failure, fix it and run
+it again.
+
+Datasets must work with both the Odoo ORM and odooly, so do not import `odoo`.
+Use the helpers above, `env[model].search/search_read/create`,
+`record.write({...})` and ids in values. An empty many2one is `False` in
+odooly but an empty recordset in the ORM, which is what `id_of()` handles.
 
 ## Using the API Key
 
@@ -204,7 +256,8 @@ server:
    - drops and recreates it if an earlier first start was interrupted,
    - installs modules from `ODOO_MODULES` that are not installed yet.
 2. **Seeding:** pipes `odoo/seed/run.py` into `odoo shell`, which runs the
-   seed steps `admin`, `users`, `apikeys` and `sample`.
+   seed steps `admin`, `users`, `apikeys` and `sample` (the datasets in
+   `odoo/seed/datasets/`).
 3. **Banner:** prints the credentials once `/web/health` answers.
 
 All steps are idempotent and run on every start. Credentials are only
@@ -226,6 +279,7 @@ make logs                       # follow logs
 make creds                      # print credentials
 make seed                       # re-run all seed steps
 make seed STEPS=users,apikeys   # re-run some seed steps
+make sample DATASETS=crm        # load sample datasets through the API with odooly
 make shell                      # bash in the odoo container
 make odoo-shell                 # Odoo Python shell with env
 make psql                       # psql on the odoo database

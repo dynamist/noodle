@@ -15,7 +15,8 @@ make up                              # start (postgres detached, odoo in foregro
 make down                            # stop, keep data
 make reset                           # stop and delete all data
 make logs                            # follow logs
-make seed STEPS=users,apikeys        # re-run seed steps in the running container
+make seed STEPS=users,apikeys        # re-run seed steps in the running container (DATASETS=crm)
+make sample DATASETS=crm             # load sample datasets through the API with odooly
 make shell / make odoo-shell / make psql
 make console                         # odooly as admin (ODOOLY_ENV=<odooly.ini section>)
 
@@ -52,8 +53,10 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 - `odoo/entrypoint.sh` - runs `init-odoo.sh` and the banner, then the official `/entrypoint.sh`
 - `odoo/init-odoo.sh` - orchestrator: database setup, then seeding
 - `odoo/lib/` - `common.sh` (defaults, `TEST_USERS`), `setup-database.sh`, `banner.sh`
-- `odoo/seed/` - Python piped into `odoo shell`: `run.py` runs `seed_admin`, `seed_users`, `seed_apikeys`,
-  `seed_sample`
+- `odoo/seed/` - Python piped into `odoo shell`: `run.py` runs `seed_admin`, `seed_users`, `seed_apikeys` and the
+  `sample` step. Mounted into the container, so `make seed` needs no rebuild
+- `odoo/seed/datasets/` - sample datasets (`@dataset` from `seed_datasets.py`), run by the `sample` step and by
+  `make sample` (`run_odooly.py` piped into odooly)
 - `addons/` - custom Dynamist modules, installed when listed in `ODOO_MODULES`
 - `mise.toml` / `odooly.ini` - pinned odooly and its connection sections
 
@@ -62,7 +65,10 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 - Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`), default branch `master`
 - Init and seed steps must be idempotent (check, then create or update) since they run on every start. Shell modules
   in `odoo/lib/` must also run on their own.
-- Sample records use `ensure_record()` with `__oodev__.<name>` xmlids and are only created when missing
+- Sample data goes in a dataset file in `odoo/seed/datasets/`, declaring its Odoo `modules` and the datasets it
+  builds on (`after`). Records use `ensure_record()` with `__oodev__.<name>` xmlids and are only created when missing
+- Datasets run under both the Odoo ORM and odooly: do not import `odoo`, use the `seed_datasets` helpers, plain ids
+  in values and `id_of()` for many2one fields that may be empty
 - Keep `compose.yml`, `odoo/lib/common.sh`, `mise.toml`, `odooly.ini` and the docs in sync when changing credentials
 
 ## Odoo 19 Gotchas

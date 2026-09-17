@@ -1,4 +1,4 @@
-.PHONY: help check-runtime tools up down reset logs ps creds seed shell odoo-shell psql console
+.PHONY: help check-runtime tools up down reset logs ps creds seed sample shell odoo-shell psql console
 
 .DEFAULT_GOAL := help
 
@@ -54,8 +54,11 @@ ps: check-runtime ## show odoo container status
 creds: check-runtime ## print credentials of the running odoo
 	@$(COMPOSE) exec odoo /opt/oodev/lib/banner.sh
 
-seed: check-runtime ## re-run seeding in the running odoo (STEPS=users,apikeys to limit)
-	$(COMPOSE) exec -e SEED_STEPS=$(STEPS) odoo /opt/oodev/init-odoo.sh --seed-only
+seed: check-runtime ## re-run seeding in the running odoo (STEPS=users,apikeys, DATASETS=crm to limit)
+	$(COMPOSE) exec -e SEED_STEPS=$(STEPS) -e SEED_DATASETS=$(DATASETS) odoo /opt/oodev/init-odoo.sh --seed-only
+
+sample: ## load sample datasets through the API with odooly (DATASETS=crm to limit, ODOOLY_ENV)
+	OODEV_SEED_DIR=$(CURDIR)/odoo/seed SEED_DATASETS=$(DATASETS) mise exec -- odooly --env $(ODOOLY_ENV) < odoo/seed/run_odooly.py
 
 ##@ Shells
 

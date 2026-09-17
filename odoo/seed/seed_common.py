@@ -2,8 +2,6 @@
 
 import os
 
-XMLID_MODULE = "__oodev__"
-
 # Groups given to each test user role, on top of base.group_user for internal roles
 ROLES = {
     "internal": [],
@@ -71,29 +69,3 @@ def refs(env, xmlids):
         else:
             log(f"WARNING: {xmlid} not found, is its module installed?")
     return records
-
-
-def ensure_record(env, name, model, vals):
-    """Create a record tracked by the xmlid __oodev__.<name> unless it exists.
-
-    Existing records are left alone, so changes made while developing survive
-    restarts. Delete a record to have it recreated on the next start.
-    """
-    xmlid = f"{XMLID_MODULE}.{name}"
-    record = env.ref(xmlid, raise_if_not_found=False)
-    if record and record.exists():
-        return record
-
-    env["ir.model.data"].search([("module", "=", XMLID_MODULE), ("name", "=", name)]).unlink()
-    record = env[model].create(vals)
-    env["ir.model.data"].create(
-        {
-            "module": XMLID_MODULE,
-            "name": name,
-            "model": model,
-            "res_id": record.id,
-            "noupdate": True,
-        }
-    )
-    log(f"Created {model} {record.display_name!r}")
-    return record

@@ -4,6 +4,7 @@ Piped into `odoo shell`, which provides a superuser `env` and rolls back
 when the script ends, so this commits explicitly.
 
 SEED_STEPS=admin,users limits which steps run (default: all).
+SEED_DATASETS=crm,sale limits the datasets of the sample step (default: all).
 """
 
 import os
@@ -13,7 +14,7 @@ sys.path.insert(0, os.environ.get("OODEV_SEED_DIR", "/opt/oodev/seed"))
 
 import seed_admin  # noqa: E402
 import seed_apikeys  # noqa: E402
-import seed_sample  # noqa: E402
+import seed_datasets  # noqa: E402
 import seed_users  # noqa: E402
 
 env = globals()["env"]  # injected by `odoo shell`
@@ -22,7 +23,7 @@ STEPS = {
     "admin": seed_admin.run,
     "users": seed_users.run,
     "apikeys": seed_apikeys.run,
-    "sample": seed_sample.run,
+    "sample": seed_datasets.run,
 }
 
 selected = [step for step in os.environ.get("SEED_STEPS", "").split(",") if step] or list(STEPS)

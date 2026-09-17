@@ -29,6 +29,8 @@ services:
       - '[::1]:${ODOO_PORT:-8069}:8069'
     volumes:
       - odoo-data:/var/lib/odoo
+      # Seed scripts and datasets from the checkout, `make seed` picks up edits without a rebuild
+      - ./odoo/seed:/opt/oodev/seed:ro
     depends_on:
       db:
         condition: service_healthy

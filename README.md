@@ -59,7 +59,8 @@ curl -s http://odoo.localhost:8069/json/2/res.partner/search_read \
 | `make reset` | Stop and **delete all data volumes** |
 | `make logs` / `make ps` | Follow logs / show container status |
 | `make creds` | Print the credentials of the running odoo |
-| `make seed` | Re-run seeding (`STEPS=users,apikeys` to limit) |
+| `make seed` | Re-run seeding (`STEPS=users,apikeys`, `DATASETS=crm` to limit) |
+| `make sample` | Load the sample datasets through the API with odooly (`DATASETS=crm` to limit) |
 | `make shell` / `make odoo-shell` / `make psql` | bash, Odoo Python shell or psql in the container |
 | `make console` | odooly console (`ODOOLY_ENV=sales` for another `odooly.ini` section) |
 | `make tools` | Install the tools pinned in `mise.toml` |
