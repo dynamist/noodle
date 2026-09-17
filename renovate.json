@@ -1,0 +1,72 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "timezone": "Europe/Stockholm",
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "pre-commit": {
+    "enabled": true
+  },
+  "kubernetes": {
+    "managerFilePatterns": [
+      "/^k8s/.+\\.yaml$/"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Group all GitHub Actions bumps into one PR",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github actions"
+    },
+    {
+      "description": "Group all pre-commit hook bumps into one PR",
+      "matchManagers": [
+        "pre-commit"
+      ],
+      "groupName": "pre-commit hooks"
+    },
+    {
+      "description": "Group the pinned CLI tools into one PR",
+      "matchManagers": [
+        "mise"
+      ],
+      "groupName": "mise tools"
+    },
+    {
+      "description": "Keep kubectl and the k3s image in lockstep (same upstream release, two managers). Listed after the generic mise group so it wins for kubectl.",
+      "matchDepNames": [
+        "kubectl",
+        "rancher/k3s"
+      ],
+      "groupName": "kubernetes toolchain",
+      "prBodyNotes": [
+        ":warning: `k8s/cluster/k3d.yaml` is shared verbatim with every repo using the `dynamist-dev` cluster. Bump it in all of them in the same window, or the `coexistence` job fails on the diff. Recreate the cluster with `make destroy` + `make up` afterwards."
+      ]
+    },
+    {
+      "description": "Odoo base image: the dated tag needs regex versioning, plain docker versioning treats the date as an incompatible suffix",
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)-(?<patch>\\d+)$",
+      "prBodyNotes": [
+        ":warning: The code has to match the schema in the persisted database. Run `make reset` after merging (or update the modules with `-u all`)."
+      ]
+    },
+    {
+      "description": "dynamist/odoo is built from this repo and tagged at deploy time, there is nothing upstream to track",
+      "matchDepNames": [
+        "dynamist/odoo"
+      ],
+      "enabled": false
+    }
+  ]
+}
