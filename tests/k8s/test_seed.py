@@ -15,6 +15,9 @@ SAMPLE_XMLIDS = {
     "project_sandbox_task_1",
     "project_sandbox_task_2",
     "project_sandbox_task_3",
+    "partner_rmi",
+    "project_datacenter",
+    "user_mikael_wallin",
 }
 
 

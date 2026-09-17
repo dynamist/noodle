@@ -76,6 +76,11 @@ A few records on top of the demo data, owned by the test users:
 - A quotation for Exempel AB, visible to the portal user
 - The project **noodle Sandbox** with the columns Backlog, Up next, In progress,
   In review and Done, and three tasks assigned to Per, two in Backlog and one in Up next
+- The project **Datacenter migration** for the fictional customer Robot
+  Mechanics Inc, with the same columns, a migration underway in them and the RMI
+  team as users and assignees (Mikael Wallin as manager, Ove Pettersson, Viola
+  Larsson, Daniel Lindgren, Tommy Svensson). They have no password and no API
+  key, they are there to be assigned work
 
 Sample records are only created when they are missing, so changes you make
 survive restarts. Delete a record to get it back on the next start. The

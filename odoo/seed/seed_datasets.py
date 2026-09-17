@@ -104,11 +104,12 @@ def user(env, login):
     return env["res.users"].browse(users.ids[0])
 
 
-def ensure_record(env, name, model, vals):
+def ensure_record(env, name, model, vals, context=None):
     """Create a record tracked by the xmlid __noodle__.<name> unless it exists.
 
     Existing records are left alone, so changes made while developing survive
-    restarts. Delete a record to have it recreated on the next run.
+    restarts. Delete a record to have it recreated on the next run. context is
+    added to the environment of the create call.
     """
     stale = []
     for data in _lookup(env, name):
@@ -119,7 +120,8 @@ def ensure_record(env, name, model, vals):
 
     if stale:
         env["ir.model.data"].browse(stale).unlink()
-    record = env[model].browse(env[model].create(vals).ids[0])
+    target = env[model].with_context(**context) if context else env[model]
+    record = env[model].browse(target.create(vals).ids[0])
     env["ir.model.data"].create(
         {
             "module": XMLID_MODULE,
