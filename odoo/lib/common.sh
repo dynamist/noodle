@@ -4,7 +4,7 @@
 set -euo pipefail
 
 # Configuration - can be overridden via environment variables
-export PGHOST="${PGHOST:-db}"
+export PGHOST="${PGHOST:-postgres}"
 export PGPORT="${PGPORT:-5432}"
 export PGUSER="${PGUSER:-odoo}"
 export PGPASSWORD="${PGPASSWORD:-supersecr3tpassw0rdfordatabase1}"

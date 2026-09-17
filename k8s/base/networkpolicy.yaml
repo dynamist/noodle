@@ -30,11 +30,11 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: db-from-odoo
+  name: postgres-from-odoo
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: db
+      app.kubernetes.io/name: postgres
   policyTypes: [Ingress]
   ingress:
     - from:

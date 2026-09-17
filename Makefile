@@ -85,13 +85,13 @@ deploy: check-tools ## apply the manifests of OVERLAY (local or ci) with the imp
 	mise exec -- kubectl --context $(KUBE_CONTEXT) apply -k $(BUILD_DIR)
 
 up: cluster odoo-image deploy ## start odoo in the cluster and follow its logs until it is ready
-	@$(KUBECTL) rollout status statefulset/db --timeout=5m
+	@$(KUBECTL) rollout status statefulset/postgres --timeout=5m
 	@$(KUBECTL) logs -f deploy/odoo --pod-running-timeout=5m & logs=$$!; \
 	$(KUBECTL) rollout status deploy/odoo --timeout=30m; status=$$?; \
 	sleep 2; kill $$logs 2>/dev/null; exit $$status
 
 down: check-tools ## stop odoo and postgres, keep data
-	$(KUBECTL) scale deploy/odoo statefulset/db --replicas=0
+	$(KUBECTL) scale deploy/odoo statefulset/postgres --replicas=0
 
 reset: check-tools ## DELETE the noodle namespace with all its data (other apps are untouched)
 	mise exec -- kubectl --context $(KUBE_CONTEXT) delete namespace $(NAMESPACE) --ignore-not-found --wait
@@ -136,7 +136,7 @@ test-k8s: ## run the smoke, seed data and isolation tests in tests/k8s against t
 
 ci-deploy: cluster odoo-image ## build and deploy the ci overlay, wait until it is ready
 	$(MAKE) --no-print-directory deploy OVERLAY=ci
-	$(KUBECTL) rollout status statefulset/db --timeout=10m
+	$(KUBECTL) rollout status statefulset/postgres --timeout=10m
 	$(KUBECTL) rollout status deploy/odoo --timeout=40m
 
 ci-test: ## run every test against the deployed ci overlay
@@ -152,7 +152,7 @@ psql: check-tools ## open psql on the odoo database
 	$(KUBECTL) exec -it deploy/odoo -- psql
 
 db-forward: check-tools ## forward postgres to 127.0.0.1:POSTGRES_PORT until Ctrl+C
-	$(KUBECTL) port-forward svc/db $(POSTGRES_PORT):5432
+	$(KUBECTL) port-forward svc/postgres $(POSTGRES_PORT):5432
 
 console: ## open odooly console on the local odoo (ODOOLY_ENV=dev)
 	@command -v mise >/dev/null || { echo "Error: mise not found, see https://mise.jdx.dev"; exit 1; }

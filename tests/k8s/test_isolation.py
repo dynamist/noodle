@@ -40,7 +40,9 @@ def other_namespaces():
     return ["default", *(ns["metadata"]["name"] for ns in others)]
 
 
-@pytest.mark.parametrize("host,port", [("odoo.noodle.svc.cluster.local", 8069), ("db.noodle.svc.cluster.local", 5432)])
+@pytest.mark.parametrize(
+    "host,port", [("odoo.noodle.svc.cluster.local", 8069), ("postgres.noodle.svc.cluster.local", 5432)]
+)
 def test_other_namespaces_cannot_reach_noodle(host, port):
     for namespace in other_namespaces():
         assert not probe_from(namespace, host, port), f"{host}:{port} is reachable from {namespace}"

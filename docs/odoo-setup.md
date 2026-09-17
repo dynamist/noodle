@@ -126,7 +126,7 @@ on every start. To update an installed module after changing it:
 
 ```bash
 make shell
-odoo -d odoo -u dynamist_foo --stop-after-init --no-http --db_host db
+odoo -d odoo -u dynamist_foo --stop-after-init --no-http --db_host postgres
 ```
 
 Until `addons/` contains a module, Odoo logs a warning that
@@ -287,7 +287,7 @@ its own namespace:
   `odoo.localhost` to the `odoo` Service. Names under `.localhost` resolve to
   loopback, no `/etc/hosts` entry is needed.
 - **noodle:** `k8s/base` holds the `noodle` namespace, PostgreSQL (StatefulSet
-  `db`), Odoo (Deployment `odoo`, `Recreate` so two pods never initialize the
+  `postgres`), Odoo (Deployment `odoo`, `Recreate` so two pods never initialize the
   same database), the Ingress, a ResourceQuota with default limits and
   NetworkPolicies. Only Traefik reaches Odoo and only Odoo reaches PostgreSQL.
   Overlays: `local` (with `config.local.env`) and `ci`.
@@ -357,7 +357,7 @@ attempt). An interrupted first start is detected and the database is
 recreated on the next start.
 
 **After bumping the Odoo image** in `Dockerfile`: run `make reset`, or update
-all modules with `odoo -d odoo -u all --stop-after-init --no-http --db_host db`
+all modules with `odoo -d odoo -u all --stop-after-init --no-http --db_host postgres`
 from `make shell`.
 
 **Cluster version warning:** `make up` warns when the running cluster uses a

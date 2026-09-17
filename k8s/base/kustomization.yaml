@@ -7,7 +7,7 @@ labels:
 resources:
   - namespace.yaml
   - quota.yaml
-  - db.yaml
+  - postgres.yaml
   - odoo.yaml
   - ingress.yaml
   - networkpolicy.yaml

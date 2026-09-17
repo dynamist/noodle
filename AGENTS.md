@@ -53,7 +53,7 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 
 - `k8s/cluster/k3d.yaml` - shared k3d cluster `dynamist-dev` (Traefik on 127.0.0.1:80/443), identical in every repo
   that uses it
-- `k8s/base` - namespace `noodle`: `db` StatefulSet (postgres:17), `odoo` Deployment, Ingress `odoo.localhost`,
+- `k8s/base` - namespace `noodle`: `postgres` StatefulSet (postgres:17), `odoo` Deployment, Ingress `odoo.localhost`,
   NetworkPolicies, quota. Settings in `config.env`/`secret.env`. Overlays `local` and `ci`
 - `tests/k8s` - smoke, seed data and isolation tests against the deployed instance
 - `Dockerfile` - extends a pinned `odoo:19.0-<date>` image with `odoo/` and `addons/`
