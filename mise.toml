@@ -1,6 +1,6 @@
 [tools]
 # The pipx backend installs with `uv tool install`
-uv = "0.12.13"
+uv = "0.12.15"
 "pipx:odooly" = "2.6.6"
 
 [env]
