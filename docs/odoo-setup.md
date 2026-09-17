@@ -74,7 +74,8 @@ A few records on top of the demo data, owned by the test users:
 - Two opportunities for Exempel AB, one owned by Astrid (sales user) and one by
   Johan (sales administrator), so Astrid sees fewer leads than Johan
 - A quotation for Exempel AB, visible to the portal user
-- The project **noodle Sandbox** with three tasks assigned to Per
+- The project **noodle Sandbox** with the columns Backlog, Up next, In progress,
+  In review and Done, and three tasks assigned to Per, two in Backlog and one in Up next
 
 Sample records are only created when they are missing, so changes you make
 survive restarts. Delete a record to get it back on the next start. The
