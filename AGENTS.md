@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents when working with code in this r
 
 ## Project Overview
 
-oodev runs a disposable local Odoo 19 server (image `dynamist/odoo`) with demo data, test users and fixed
+noodle runs a disposable local Odoo 19 server (image `dynamist/odoo`) with demo data, test users and fixed
 credentials, for developing tools against Odoo. There is no application code, only the container setup, the init and
 seed scripts, and custom modules in `addons/`.
 
@@ -13,7 +13,7 @@ seed scripts, and custom modules in `addons/`.
 ```bash
 make up                              # create/reuse the k3d cluster, build, deploy, follow logs
 make down                            # stop, keep data
-make reset                           # delete the oodev namespace and its data
+make reset                           # delete the noodle namespace and its data
 make destroy                         # delete the shared cluster (FORCE=1 if other apps run)
 make logs / make ps
 make seed STEPS=users,apikeys        # copy odoo/seed into the pod and re-run seed steps (DATASETS=crm)
@@ -53,7 +53,7 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 
 - `k8s/cluster/k3d.yaml` - shared k3d cluster `dynamist-dev` (Traefik on 127.0.0.1:80/443), identical in every repo
   that uses it
-- `k8s/base` - namespace `oodev`: `db` StatefulSet (postgres:17), `odoo` Deployment, Ingress `odoo.localhost`,
+- `k8s/base` - namespace `noodle`: `db` StatefulSet (postgres:17), `odoo` Deployment, Ingress `odoo.localhost`,
   NetworkPolicies, quota. Settings in `config.env`/`secret.env`. Overlays `local` and `ci`
 - `tests/k8s` - smoke, seed data and isolation tests against the deployed instance
 - `Dockerfile` - extends a pinned `odoo:19.0-<date>` image with `odoo/` and `addons/`
@@ -69,11 +69,11 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 
 ## Conventions
 
-- Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`), default branch `master`
+- Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`), default branch `main`
 - Init and seed steps must be idempotent (check, then create or update) since they run on every start. Shell modules
   in `odoo/lib/` must also run on their own.
 - Sample data goes in a dataset file in `odoo/seed/datasets/`, declaring its Odoo `modules` and the datasets it
-  builds on (`after`). Records use `ensure_record()` with `__oodev__.<name>` xmlids and are only created when missing
+  builds on (`after`). Records use `ensure_record()` with `__noodle__.<name>` xmlids and are only created when missing
 - Datasets run under both the Odoo ORM and odooly: do not import `odoo`, use the `seed_datasets` helpers, plain ids
   in values and `id_of()` for many2one fields that may be empty
 - Keep `k8s/base/*.env`, `odoo/lib/common.sh`, `mise.toml`, `odooly.ini` and the docs in sync when changing credentials

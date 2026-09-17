@@ -4,7 +4,7 @@ import pytest
 import seed_common
 from conftest import ODOO_URL, json2, json2_ok, kubectl
 
-# Sample records of odoo/seed/datasets/, by xmlid name under __oodev__
+# Sample records of odoo/seed/datasets/, by xmlid name under __noodle__
 SAMPLE_XMLIDS = {
     "partner_exempel",
     "product_consulting_hour",
@@ -49,7 +49,7 @@ def test_user_api_keys(test_users):
 
 
 def test_sample_records_exist():
-    records = json2_ok("ir.model.data", "search_read", domain=[["module", "=", "__oodev__"]], fields=["name"])
+    records = json2_ok("ir.model.data", "search_read", domain=[["module", "=", "__noodle__"]], fields=["name"])
     assert SAMPLE_XMLIDS <= {record["name"] for record in records}
 
 
@@ -61,6 +61,6 @@ def test_sales_user_sees_fewer_leads_than_sales_manager():
 
 @pytest.mark.slow
 def test_seeding_again_creates_nothing():
-    result = kubectl("exec", "deploy/odoo", "--", "/opt/oodev/init-odoo.sh", "--seed-only", timeout=600)
+    result = kubectl("exec", "deploy/odoo", "--", "/opt/noodle/init-odoo.sh", "--seed-only", timeout=600)
     assert "Seeding done!" in result.stdout
     assert "Created" not in result.stdout, result.stdout

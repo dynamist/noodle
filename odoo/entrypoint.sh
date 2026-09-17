@@ -5,9 +5,9 @@ set -euo pipefail
 
 # Only initialize when starting the server, not for `odoo shell`, bash etc.
 if [ $# -eq 0 ] || { [ $# -eq 1 ] && [ "$1" = "odoo" ]; } || [[ "$1" == -* ]]; then
-  /opt/oodev/init-odoo.sh
+  /opt/noodle/init-odoo.sh
   # Printed in the background once the server answers
-  /opt/oodev/lib/banner.sh --wait &
+  /opt/noodle/lib/banner.sh --wait &
 fi
 
 exec /entrypoint.sh "$@"

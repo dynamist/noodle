@@ -10,7 +10,7 @@ SEED_DATASETS=crm,sale limits the datasets of the sample step (default: all).
 import os
 import sys
 
-sys.path.insert(0, os.environ.get("OODEV_SEED_DIR", "/opt/oodev/seed"))
+sys.path.insert(0, os.environ.get("NOODLE_SEED_DIR", "/opt/noodle/seed"))
 
 import seed_admin  # noqa: E402
 import seed_apikeys  # noqa: E402
@@ -32,8 +32,8 @@ if unknown:
     raise SystemExit(f"Unknown seed steps: {', '.join(sorted(unknown))} (available: {', '.join(STEPS)})")
 
 for name in selected:
-    print(f"[oodev] Seeding {name}...", flush=True)
+    print(f"[noodle] Seeding {name}...", flush=True)
     STEPS[name](env)
 
 env.cr.commit()
-print("[oodev] Seeding done!", flush=True)
+print("[noodle] Seeding done!", flush=True)

@@ -25,7 +25,7 @@ from pathlib import Path
 
 from seed_common import cfg, find_user, log
 
-XMLID_MODULE = "__oodev__"
+XMLID_MODULE = "__noodle__"
 
 Dataset = namedtuple("Dataset", "name func modules after")
 
@@ -89,7 +89,7 @@ def _browse_existing(env, model, record_id):
 
 
 def ref(env, name):
-    """Return the record of an xmlid, __oodev__.<name> unless name has a module."""
+    """Return the record of an xmlid, __noodle__.<name> unless name has a module."""
     for data in _lookup(env, name):
         record = _browse_existing(env, data["model"], data["res_id"])
         if record:
@@ -105,7 +105,7 @@ def user(env, login):
 
 
 def ensure_record(env, name, model, vals):
-    """Create a record tracked by the xmlid __oodev__.<name> unless it exists.
+    """Create a record tracked by the xmlid __noodle__.<name> unless it exists.
 
     Existing records are left alone, so changes made while developing survive
     restarts. Delete a record to have it recreated on the next run.
@@ -137,8 +137,8 @@ def load():
     """Import datasets/*.py once, registering their datasets."""
     if DATASETS:
         return
-    for path in sorted((Path(cfg("OODEV_SEED_DIR")) / "datasets").glob("[!_]*.py")):
-        spec = importlib.util.spec_from_file_location(f"oodev_dataset_{path.stem}", path)
+    for path in sorted((Path(cfg("NOODLE_SEED_DIR")) / "datasets").glob("[!_]*.py")):
+        spec = importlib.util.spec_from_file_location(f"noodle_dataset_{path.stem}", path)
         spec.loader.exec_module(importlib.util.module_from_spec(spec))
 
 

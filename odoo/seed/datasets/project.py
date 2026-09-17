@@ -10,7 +10,7 @@ def project(env):
         env,
         "project_sandbox",
         "project.project",
-        {"name": "oodev Sandbox", "user_id": manager.id, "partner_id": ref(env, "partner_exempel").id},
+        {"name": "noodle Sandbox", "user_id": manager.id, "partner_id": ref(env, "partner_exempel").id},
     )
     for number, task_name in enumerate(["Set up API access", "Write import script", "Review access rules"], 1):
         ensure_record(

@@ -1,8 +1,8 @@
-# Keeps oodev from starving other apps in the shared cluster
+# Keeps noodle from starving other apps in the shared cluster
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-  name: oodev
+  name: noodle
 spec:
   hard:
     pods: "10"
@@ -15,7 +15,7 @@ spec:
 apiVersion: v1
 kind: LimitRange
 metadata:
-  name: oodev
+  name: noodle
 spec:
   limits:
     - type: Container

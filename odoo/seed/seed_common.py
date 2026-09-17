@@ -24,13 +24,13 @@ def cfg(name):
 
 
 def log(message):
-    print(f"[oodev]   {message}", flush=True)
+    print(f"[noodle]   {message}", flush=True)
 
 
 def test_users():
-    """Return (login, name, role) tuples from OODEV_TEST_USERS (set by lib/common.sh)."""
+    """Return (login, name, role) tuples from NOODLE_TEST_USERS (set by lib/common.sh)."""
     users = []
-    for line in os.environ.get("OODEV_TEST_USERS", "").splitlines():
+    for line in os.environ.get("NOODLE_TEST_USERS", "").splitlines():
         if line.strip():
             login, name, role = line.split(":")
             users.append((login, name, role))

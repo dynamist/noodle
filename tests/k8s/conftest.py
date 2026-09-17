@@ -1,4 +1,4 @@
-"""Tests against oodev deployed in the shared k3d cluster (`make up`, `make test-k8s`).
+"""Tests against noodle deployed in the shared k3d cluster (`make up`, `make test-k8s`).
 
 Run with kubectl on PATH (`mise exec --`), see the `test` target in the Makefile.
 """
@@ -21,7 +21,7 @@ ODOO_URL = os.environ.get("ODOO_URL", "http://odoo.localhost")
 DATABASE = "odoo"
 ADMIN_KEY = "odoo-supersecr3tapikeyfordevelop1"
 KUBE_CONTEXT = "k3d-dynamist-dev"
-NAMESPACE = "oodev"
+NAMESPACE = "noodle"
 
 
 def kubectl(*args, check=True, namespace=NAMESPACE, **kwargs):
@@ -52,9 +52,9 @@ def json2_ok(model, method, key=ADMIN_KEY, **params):
 @pytest.fixture(scope="session")
 def test_users():
     """(login, name, role) from odoo/lib/common.sh, the same list the seeding uses."""
-    script = f"source {ROOT / 'odoo/lib/common.sh'} && printf '%s' \"$OODEV_TEST_USERS\""
+    script = f"source {ROOT / 'odoo/lib/common.sh'} && printf '%s' \"$NOODLE_TEST_USERS\""
     users = subprocess.run(["bash", "-c", script], check=True, capture_output=True, text=True).stdout
-    os.environ["OODEV_TEST_USERS"] = users
+    os.environ["NOODLE_TEST_USERS"] = users
     os.environ.setdefault("ODOO_USERS_API_KEY_SUFFIX", "supersecr3tapikeyfordevelop1")
     return seed_common.test_users()
 

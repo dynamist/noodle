@@ -6,7 +6,7 @@
 # context explicitly so nothing here ever acts on another cluster.
 CLUSTER := dynamist-dev
 KUBE_CONTEXT := k3d-$(CLUSTER)
-NAMESPACE := oodev
+NAMESPACE := noodle
 KUBECTL = mise exec -- kubectl --context $(KUBE_CONTEXT) -n $(NAMESPACE)
 K3D = mise exec -- k3d
 
@@ -57,7 +57,7 @@ destroy: check-tools ## DELETE the shared cluster with every app and all data (F
 	@others=$$(mise exec -- kubectl --context $(KUBE_CONTEXT) get ns -l 'dynamist.se/dev-app,dynamist.se/dev-app!=$(NAMESPACE)' -o name 2>/dev/null); \
 	if [ -n "$$others" ] && [ "$(FORCE)" != "1" ]; then \
 		echo "Other apps run in the cluster: $$others"; \
-		echo "Use make reset to delete only oodev, or make destroy FORCE=1 to delete them too"; \
+		echo "Use make reset to delete only noodle, or make destroy FORCE=1 to delete them too"; \
 		exit 1; \
 	fi
 	$(K3D) cluster delete $(CLUSTER)
@@ -93,7 +93,7 @@ up: cluster odoo-image deploy ## start odoo in the cluster and follow its logs u
 down: check-tools ## stop odoo and postgres, keep data
 	$(KUBECTL) scale deploy/odoo statefulset/db --replicas=0
 
-reset: check-tools ## DELETE the oodev namespace with all its data (other apps are untouched)
+reset: check-tools ## DELETE the noodle namespace with all its data (other apps are untouched)
 	mise exec -- kubectl --context $(KUBE_CONTEXT) delete namespace $(NAMESPACE) --ignore-not-found --wait
 
 logs: check-tools ## follow odoo logs
@@ -106,16 +106,16 @@ shell: check-tools ## open shell in the odoo pod
 	$(KUBECTL) exec -it deploy/odoo -- /bin/bash
 
 creds: check-tools ## print credentials of the running odoo
-	@$(KUBECTL) exec deploy/odoo -- /opt/oodev/lib/banner.sh
+	@$(KUBECTL) exec deploy/odoo -- /opt/noodle/lib/banner.sh
 
 seed: check-tools ## copy odoo/seed into odoo and re-run seeding (STEPS=users,apikeys, DATASETS=crm to limit)
 	tar -C odoo/seed --exclude=__pycache__ -c . | \
-		$(KUBECTL) exec -i deploy/odoo -- sh -c 'rm -rf /tmp/oodev-seed && mkdir /tmp/oodev-seed && tar -x -C /tmp/oodev-seed'
-	$(KUBECTL) exec deploy/odoo -- env OODEV_SEED_DIR=/tmp/oodev-seed SEED_STEPS=$(STEPS) SEED_DATASETS=$(DATASETS) \
-		/opt/oodev/init-odoo.sh --seed-only
+		$(KUBECTL) exec -i deploy/odoo -- sh -c 'rm -rf /tmp/noodle-seed && mkdir /tmp/noodle-seed && tar -x -C /tmp/noodle-seed'
+	$(KUBECTL) exec deploy/odoo -- env NOODLE_SEED_DIR=/tmp/noodle-seed SEED_STEPS=$(STEPS) SEED_DATASETS=$(DATASETS) \
+		/opt/noodle/init-odoo.sh --seed-only
 
 sample: ## load sample datasets through the API with odooly (DATASETS=crm to limit, ODOOLY_ENV)
-	OODEV_SEED_DIR=$(CURDIR)/odoo/seed SEED_DATASETS=$(DATASETS) mise exec -- odooly --env $(ODOOLY_ENV) < odoo/seed/run_odooly.py
+	NOODLE_SEED_DIR=$(CURDIR)/odoo/seed SEED_DATASETS=$(DATASETS) mise exec -- odooly --env $(ODOOLY_ENV) < odoo/seed/run_odooly.py
 
 ##@ Test
 

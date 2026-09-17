@@ -1,4 +1,4 @@
-# oodev
+# noodle
 
 A disposable local Odoo 19 server with sample data and well-known credentials,
 for developing tools against Odoo (JSON-2, XML-RPC and JSON-RPC clients,
@@ -60,7 +60,7 @@ curl -s http://odoo.localhost/json/2/res.partner/search_read \
 |--------|-------------|
 | `make up` | Create or reuse the cluster, build and deploy odoo, follow the logs until it is ready |
 | `make down` | Stop odoo and postgres, keeping the data |
-| `make reset` | **Delete the `oodev` namespace** with all its data |
+| `make reset` | **Delete the `noodle` namespace** with all its data |
 | `make destroy` | **Delete the whole cluster**, with every app in it (`FORCE=1` if other apps run) |
 | `make logs` / `make ps` | Follow odoo logs / show pods, ingress and volumes |
 | `make creds` | Print the credentials of the running odoo |

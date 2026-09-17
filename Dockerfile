@@ -12,13 +12,13 @@ COPY --chmod=0644 odoo/odoo.conf /etc/odoo/odoo.conf
 # Custom Dynamist modules, install them by adding them to ODOO_MODULES.
 # Not /mnt/extra-addons, which is a volume in the base image and would go stale.
 COPY addons/ /mnt/dynamist-addons/
-COPY --chmod=0755 odoo/entrypoint.sh odoo/init-odoo.sh /opt/oodev/
-COPY --chmod=0755 odoo/lib/ /opt/oodev/lib/
-COPY odoo/seed/ /opt/oodev/seed/
+COPY --chmod=0755 odoo/entrypoint.sh odoo/init-odoo.sh /opt/noodle/
+COPY --chmod=0755 odoo/lib/ /opt/noodle/lib/
+COPY odoo/seed/ /opt/noodle/seed/
 
 RUN chown odoo /etc/odoo/odoo.conf
 
 USER odoo
 
-ENTRYPOINT ["/opt/oodev/entrypoint.sh"]
+ENTRYPOINT ["/opt/noodle/entrypoint.sh"]
 CMD ["odoo"]

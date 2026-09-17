@@ -18,8 +18,8 @@ export ODOO_USERS_PASSWORD="${ODOO_USERS_PASSWORD:-supersecr3tpassw0rdfordevelop
 export ODOO_MODULES="${ODOO_MODULES:-contacts,crm,sale_management,account,stock,project,hr}"
 export ODOO_DEMO_DATA="${ODOO_DEMO_DATA:-true}"
 
-OODEV_HOME="${OODEV_HOME:-/opt/oodev}"
-export OODEV_SEED_DIR="${OODEV_SEED_DIR:-${OODEV_HOME}/seed}"
+NOODLE_HOME="${NOODLE_HOME:-/opt/noodle}"
+export NOODLE_SEED_DIR="${NOODLE_SEED_DIR:-${NOODLE_HOME}/seed}"
 
 # Suffix of the per-user API keys, the key is "<first name>-<suffix>"
 export ODOO_USERS_API_KEY_SUFFIX="${ODOO_USERS_API_KEY_SUFFIX:-supersecr3tapikeyfordevelop1}"
@@ -35,11 +35,11 @@ TEST_USERS=(
   "lena.hedlund:Lena Hedlund:hr_officer"
   "olof.nystrom:Olof Nyström:portal"
 )
-OODEV_TEST_USERS="$(printf '%s\n' "${TEST_USERS[@]}")"
-export OODEV_TEST_USERS
+NOODLE_TEST_USERS="$(printf '%s\n' "${TEST_USERS[@]}")"
+export NOODLE_TEST_USERS
 
 log() {
-  echo "[oodev] $*"
+  echo "[noodle] $*"
 }
 
 # API key of a test user, portal users get none

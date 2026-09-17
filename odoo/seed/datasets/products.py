@@ -9,5 +9,5 @@ def products(env):
         env,
         "product_consulting_hour",
         "product.product",
-        {"name": "oodev Consulting Hour", "type": "service", "list_price": 1200.0},
+        {"name": "noodle Consulting Hour", "type": "service", "list_price": 1200.0},
     )

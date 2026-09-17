@@ -14,7 +14,7 @@ make up
 
 `make up` creates the shared k3d cluster `dynamist-dev` (or reuses it), builds
 the `dynamist/odoo` image, imports it into the cluster, deploys
-`k8s/overlays/local` into the namespace `oodev` and follows the logs until
+`k8s/overlays/local` into the namespace `noodle` and follows the logs until
 Odoo is ready. See [Kubernetes Setup](#kubernetes-setup).
 
 The first start creates the database and installs the apps with demo data,
@@ -25,7 +25,7 @@ data.
 `supersecr3tpassw0rdfordevelop1`.
 
 **3. Stop Odoo:** `make down` stops Odoo and PostgreSQL and keeps the data,
-`make reset` deletes the `oodev` namespace with all its data.
+`make reset` deletes the `noodle` namespace with all its data.
 
 ## What Gets Created
 
@@ -70,11 +70,11 @@ Internal test users also get an employee record.
 A few records on top of the demo data, owned by the test users:
 
 - **Exempel AB**, a customer company with Olof Nyström as its contact
-- **oodev Consulting Hour**, a service product
+- **noodle Consulting Hour**, a service product
 - Two opportunities for Exempel AB, one owned by Astrid (sales user) and one by
   Johan (sales administrator), so Astrid sees fewer leads than Johan
 - A quotation for Exempel AB, visible to the portal user
-- The project **oodev Sandbox** with three tasks assigned to Per
+- The project **noodle Sandbox** with three tasks assigned to Per
 
 Sample records are only created when they are missing, so changes you make
 survive restarts. Delete a record to get it back on the next start. The
@@ -158,8 +158,8 @@ def crm(env):
 - `after` lists the datasets it builds on. They run first, and selecting a
   dataset with `DATASETS=` selects them too.
 - `ensure_record(env, name, model, vals)` creates a record with the xmlid
-  `__oodev__.<name>` unless it exists, and returns it.
-- `ref(env, name)` returns the record of `__oodev__.<name>`, or of a full
+  `__noodle__.<name>` unless it exists, and returns it.
+- `ref(env, name)` returns the record of `__noodle__.<name>`, or of a full
   xmlid such as `base.se`.
 - `user(env, login)` returns a test user.
 - `Command.create/link/clear/set` build x2many values, and `id_of(record.field)`
@@ -275,7 +275,7 @@ so tools under development are not locked out.
 
 ## Kubernetes Setup
 
-oodev runs in a local [k3d](https://k3d.io) cluster, which is k3s in Docker.
+noodle runs in a local [k3d](https://k3d.io) cluster, which is k3s in Docker.
 The cluster can be shared with other Dynamist dev apps, and each app keeps to
 its own namespace:
 
@@ -286,7 +286,7 @@ its own namespace:
 - **Routing:** each app has a standard `Ingress` with its own hostnames, here
   `odoo.localhost` to the `odoo` Service. Names under `.localhost` resolve to
   loopback, no `/etc/hosts` entry is needed.
-- **oodev:** `k8s/base` holds the `oodev` namespace, PostgreSQL (StatefulSet
+- **noodle:** `k8s/base` holds the `noodle` namespace, PostgreSQL (StatefulSet
   `db`), Odoo (Deployment `odoo`, `Recreate` so two pods never initialize the
   same database), the Ingress, a ResourceQuota with default limits and
   NetworkPolicies. Only Traefik reaches Odoo and only Odoo reaches PostgreSQL.
@@ -302,7 +302,7 @@ another cluster.
 ```bash
 make up                         # create/reuse cluster, build, deploy, follow logs
 make down                       # stop odoo and postgres, keep data
-make reset                      # delete the oodev namespace and its data
+make reset                      # delete the noodle namespace and its data
 make destroy                    # delete the whole cluster (FORCE=1 if other apps run)
 make logs / make ps             # follow odoo logs / show pods, ingress, volumes
 make creds                      # print credentials
@@ -366,7 +366,7 @@ different k3s version than `k8s/cluster/k3d.yaml`. Recreate it with
 
 ## Data Persistence
 
-The database and the filestore are PersistentVolumeClaims in the `oodev`
+The database and the filestore are PersistentVolumeClaims in the `noodle`
 namespace, stored by k3s's `local-path` provisioner inside the cluster's
 Docker container. `make down` and restarting Docker keep them, `make reset`
 deletes them and `make destroy` deletes them along with the cluster.

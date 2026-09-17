@@ -10,12 +10,12 @@ SEED_DATASETS=crm,sale limits the datasets (default: all).
 import os
 import sys
 
-sys.path.insert(0, os.environ["OODEV_SEED_DIR"])
+sys.path.insert(0, os.environ["NOODLE_SEED_DIR"])
 
 import seed_datasets  # noqa: E402
 
 env = globals()["env"]  # injected by odooly
 
-print("[oodev] Loading sample datasets...", flush=True)
+print("[noodle] Loading sample datasets...", flush=True)
 seed_datasets.run(env)
-print("[oodev] Sample datasets done!", flush=True)
+print("[noodle] Sample datasets done!", flush=True)
