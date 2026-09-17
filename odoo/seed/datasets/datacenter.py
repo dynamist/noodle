@@ -35,6 +35,7 @@ TASKS = [
     ("Routing: OSPF between the old and the new site", "up_next", ["ove.pettersson", "daniel.lindgren"], None),
     ("VPN: site-to-site tunnel for the migration window", "backlog", ["daniel.lindgren"], None),
     ("Acceptance test of the migrated racks", "backlog", ["tommy.svensson"], None),
+    ("DNS: move the rmi.lab zones to the new resolvers", "in_progress", ["viola.larsson"], "01_in_progress"),
 ]
 
 
