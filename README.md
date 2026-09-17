@@ -16,7 +16,7 @@ make up         # start postgres in the background and odoo in the foreground
 ```
 
 The first start installs the apps with demo data, which takes a few minutes.
-Later starts take seconds. Odoo is at <http://localhost:8069>.
+Later starts take seconds. Odoo is at <http://odoo.localhost:8069>.
 
 Press `Ctrl+C` and run `make down` when you are done. Data is kept in volumes
 until `make reset`.
@@ -28,11 +28,11 @@ make console    # odooly console logged in as admin with the API key
 
 ## Credentials
 
-**Local development only**, the ports are bound to 127.0.0.1.
+**Local development only**, the ports are bound to loopback.
 
 | What | Value |
 |------|-------|
-| URL / database | `http://localhost:8069` / `odoo` |
+| URL / database | `http://odoo.localhost:8069` / `odoo` |
 | Admin username / password | `admin` / `supersecr3tpassw0rdfordevelop1` |
 | Admin API key | `odoo-supersecr3tapikeyfordevelop1` |
 | Master password | `supersecr3tmasterpassw0rdfordevelop1` |
@@ -44,7 +44,7 @@ See [docs/odoo-setup.md](docs/odoo-setup.md) for the test users, API
 examples and configuration.
 
 ```bash
-curl -s http://localhost:8069/json/2/res.partner/search_read \
+curl -s http://odoo.localhost:8069/json/2/res.partner/search_read \
   -H "Authorization: bearer odoo-supersecr3tapikeyfordevelop1" \
   -H "X-Odoo-Database: odoo" -H "Content-Type: application/json" \
   -d '{"domain": [["is_company", "=", true]], "fields": ["name"], "limit": 3}'

@@ -16,7 +16,7 @@ services:
       - PGDATABASE=${ODOO_DB:-odoo}
       # Odoo 19 reads ODOO_<OPTION> env vars natively, this one sets admin_passwd
       - ODOO_ADMIN_PASSWD=${ODOO_MASTER_PASSWORD:-supersecr3tmasterpassw0rdfordevelop1}
-      - ODOO_URL=${ODOO_URL:-http://localhost:8069}
+      - ODOO_URL=${ODOO_URL:-http://odoo.localhost:8069}
       - ODOO_USER=${ODOO_USER:-admin}
       - ODOO_PASSWORD=${ODOO_PASSWORD:-supersecr3tpassw0rdfordevelop1}
       - ODOO_API_KEY=${ODOO_API_KEY:-odoo-supersecr3tapikeyfordevelop1}
@@ -25,6 +25,8 @@ services:
       - ODOO_DEMO_DATA=${ODOO_DEMO_DATA:-true}
     ports:
       - '127.0.0.1:${ODOO_PORT:-8069}:8069'
+      # odoo.localhost resolves to ::1 on some systems
+      - '[::1]:${ODOO_PORT:-8069}:8069'
     volumes:
       - odoo-data:/var/lib/odoo
     depends_on:

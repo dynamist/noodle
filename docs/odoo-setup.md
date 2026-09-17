@@ -19,7 +19,7 @@ The first start creates the database and installs the apps with demo data,
 which takes a few minutes. Later starts only check the modules and the seeded
 data, and are up in about 10 seconds.
 
-**2. Open Odoo:** <http://localhost:8069>, log in as `admin` with the password
+**2. Open Odoo:** <http://odoo.localhost:8069>, log in as `admin` with the password
 `supersecr3tpassw0rdfordevelop1`.
 
 **3. Stop Odoo:** When you are done, press `Ctrl+C`, then run `make down` to
@@ -91,8 +91,8 @@ ODOO_MODULES=contacts,sale_management,dynamist_foo make up
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `ODOO_PORT` | `8069` | Port on 127.0.0.1 for Odoo |
-| `ODOO_URL` | `http://localhost:8069` | Base URL (`web.base.url`) |
+| `ODOO_PORT` | `8069` | Port on loopback (127.0.0.1 and ::1) for Odoo |
+| `ODOO_URL` | `http://odoo.localhost:8069` | Base URL (`web.base.url`) |
 | `ODOO_DB` | `odoo` | Database name |
 | `ODOO_USER` | `admin` | Admin login |
 | `ODOO_PASSWORD` | `supersecr3tpassw0rdfordevelop1` | Admin password |
@@ -136,14 +136,14 @@ XML-RPC and JSON-RPC are deprecated and are planned to be removed in Odoo 22.
 arguments:
 
 ```bash
-curl -s http://localhost:8069/json/2/res.partner/search_read \
+curl -s http://odoo.localhost:8069/json/2/res.partner/search_read \
   -H "Authorization: bearer odoo-supersecr3tapikeyfordevelop1" \
   -H "X-Odoo-Database: odoo" \
   -H "Content-Type: application/json" \
   -d '{"domain": [["is_company", "=", true]], "fields": ["name"], "limit": 3}'
 ```
 
-The API documentation of the instance is at <http://localhost:8069/doc>
+The API documentation of the instance is at <http://odoo.localhost:8069/doc>
 (log in first).
 
 **XML-RPC**, with the API key in place of the password:
@@ -151,7 +151,7 @@ The API documentation of the instance is at <http://localhost:8069/doc>
 ```python
 from xmlrpc.client import ServerProxy
 
-url, db, key = "http://localhost:8069", "odoo", "odoo-supersecr3tapikeyfordevelop1"
+url, db, key = "http://odoo.localhost:8069", "odoo", "odoo-supersecr3tapikeyfordevelop1"
 uid = ServerProxy(f"{url}/xmlrpc/2/common").authenticate(db, "admin", key, {})
 models = ServerProxy(f"{url}/xmlrpc/2/object")
 print(models.execute_kw(db, uid, key, "res.partner", "search_count", [[]]))
@@ -160,7 +160,7 @@ print(models.execute_kw(db, uid, key, "res.partner", "search_count", [[]]))
 **JSON-RPC:**
 
 ```bash
-curl -s http://localhost:8069/jsonrpc -H "Content-Type: application/json" -d '{
+curl -s http://odoo.localhost:8069/jsonrpc -H "Content-Type: application/json" -d '{
   "jsonrpc": "2.0", "method": "call",
   "params": {"service": "object", "method": "execute_kw",
              "args": ["odoo", 2, "odoo-supersecr3tapikeyfordevelop1", "res.partner", "search_count", [[]]]}}'
@@ -259,4 +259,4 @@ next `make up` starts from scratch.
 
 This setup is for local development only. The credentials are public, list
 the database manager and turn off the login cooldown. The ports are bound to
-127.0.0.1, do not expose them or use this configuration in production.
+loopback, do not expose them or use this configuration in production.

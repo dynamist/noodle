@@ -5,7 +5,7 @@ uv = "0.12.15"
 
 [env]
 # Connection details of the local Odoo, same defaults as compose.yml
-ODOO_URL = "http://localhost:8069"
+ODOO_URL = "http://odoo.localhost:8069"
 ODOO_DB = "odoo"
 ODOO_USER = "admin"
 ODOO_PASSWORD = "supersecr3tpassw0rdfordevelop1"

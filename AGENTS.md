@@ -20,7 +20,7 @@ make shell / make odoo-shell / make psql
 make console                         # odooly as admin (ODOOLY_ENV=<odooly.ini section>)
 
 # Test against the local Odoo (safe to run data-altering operations)
-curl -s http://localhost:8069/json/2/res.partner/search_count \
+curl -s http://odoo.localhost:8069/json/2/res.partner/search_count \
   -H "Authorization: bearer odoo-supersecr3tapikeyfordevelop1" -H "X-Odoo-Database: odoo" \
   -H "Content-Type: application/json" -d '{"domain": []}'
 ```
@@ -29,7 +29,7 @@ curl -s http://localhost:8069/json/2/res.partner/search_count \
 
 This is a disposable test environment. These specific credentials indicate a safe-to-modify development instance.
 
-- URL `http://localhost:8069`, database `odoo`
+- URL `http://odoo.localhost:8069`, database `odoo`
 - Admin `admin` / `supersecr3tpassw0rdfordevelop1`, API key `odoo-supersecr3tapikeyfordevelop1`
 - Test users (`odoo/lib/common.sh`): password `supersecr3tpassw0rdfordevelop1`, API key
   `<first name>-supersecr3tapikeyfordevelop1`
