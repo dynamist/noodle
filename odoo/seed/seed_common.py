@@ -59,6 +59,19 @@ def ensure_password(user, password):
     return True
 
 
+def set_param(env, key, value):
+    """Set a system parameter, Odoo 20 replaced set_param() with typed setters."""
+    params = env["ir.config_parameter"]
+    if not hasattr(params, "set_str"):
+        params.set_param(key, str(value))
+    elif isinstance(value, bool):
+        params.set_bool(key, value)
+    elif isinstance(value, int):
+        params.set_int(key, value)
+    else:
+        params.set_str(key, value)
+
+
 def refs(env, xmlids):
     """Resolve xmlids to records, skipping those whose module is not installed."""
     records = []

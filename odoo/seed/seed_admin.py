@@ -1,6 +1,6 @@
 """Admin login and password plus instance settings for tool development."""
 
-from seed_common import cfg, ensure_password, log
+from seed_common import cfg, ensure_password, log, set_param
 
 
 def run(env):
@@ -14,8 +14,7 @@ def run(env):
     if ensure_password(admin, cfg("ODOO_PASSWORD")):
         log("Admin password set")
 
-    params = env["ir.config_parameter"]
-    params.set_param("web.base.url", cfg("ODOO_URL"))
-    params.set_param("web.base.url.freeze", "True")
+    set_param(env, "web.base.url", cfg("ODOO_URL"))
+    set_param(env, "web.base.url.freeze", True)
     # Tools under development fail logins a lot, do not lock accounts out
-    params.set_param("base.login_cooldown_after", "0")
+    set_param(env, "base.login_cooldown_after", 0)
