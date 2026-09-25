@@ -18,6 +18,15 @@ wait_for_http() {
 }
 
 # Pad to a width in characters, printf pads multibyte names like Nyström by bytes
+installed_apps() {
+  psql -tAc "SELECT string_agg(name, ', ' ORDER BY name) FROM ir_module_module
+    WHERE state = 'installed' AND application" 2>/dev/null || true
+}
+
+installed_count() {
+  psql -tAc "SELECT count(*) FROM ir_module_module WHERE state = 'installed'" 2>/dev/null || true
+}
+
 pad() {
   local LC_ALL=C.UTF-8 text=$1 width=$2
   printf "%s%*s" "$text" $((width - ${#text})) ""
@@ -29,11 +38,13 @@ print_banner() {
   echo "Odoo Dev Setup Complete!"
   echo "================================"
   echo ""
+  echo "📦 Odoo: $(python3 -c 'from odoo.release import version; print(version)')"
   echo "👨‍💻 Username: $ODOO_USER"
   echo "🔑 Password: $ODOO_PASSWORD"
   echo "🔐 API Key: $ODOO_API_KEY"
   echo "🗄️ Database: $PGDATABASE"
   echo "🛡️ Master password: $ODOO_ADMIN_PASSWD"
+  echo "🧩 Apps: $(installed_apps) ($(installed_count) modules installed)"
   echo ""
   echo "🤖 Test users (password: $ODOO_USERS_PASSWORD):"
   local login name role
