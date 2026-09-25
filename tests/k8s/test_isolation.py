@@ -33,6 +33,17 @@ def probe_from(namespace, host, port):
     return output.strip() == "OPEN"
 
 
+def odoo_clients():
+    """Namespaces that odoo-from-dev-apps lets reach Odoo."""
+    policies = yaml.safe_load_all((ROOT / "k8s/base/networkpolicy.yaml").read_text())
+    [policy] = [p for p in policies if p["metadata"]["name"] == "odoo-from-dev-apps"]
+    return {
+        peer["namespaceSelector"]["matchLabels"]["kubernetes.io/metadata.name"]
+        for rule in policy["spec"]["ingress"]
+        for peer in rule["from"]
+    }
+
+
 def other_namespaces():
     """default plus the namespaces of other dev apps in the shared cluster."""
     selector = f"dynamist.se/dev-app,dynamist.se/dev-app!={NAMESPACE}"
@@ -41,11 +52,22 @@ def other_namespaces():
 
 
 @pytest.mark.parametrize(
-    "host,port", [("odoo.noodle.svc.cluster.local", 8069), ("postgres.noodle.svc.cluster.local", 5432)]
+    "host,port,allowed",
+    [("odoo.noodle.svc.cluster.local", 8069, odoo_clients()), ("postgres.noodle.svc.cluster.local", 5432, set())],
 )
-def test_other_namespaces_cannot_reach_noodle(host, port):
+def test_other_namespaces_cannot_reach_noodle(host, port, allowed):
     for namespace in other_namespaces():
-        assert not probe_from(namespace, host, port), f"{host}:{port} is reachable from {namespace}"
+        if namespace not in allowed:
+            assert not probe_from(namespace, host, port), f"{host}:{port} is reachable from {namespace}"
+
+
+def test_dev_app_clients_reach_odoo():
+    """The namespaces in odoo-from-dev-apps can use the Odoo API, when they are deployed."""
+    clients = odoo_clients() & set(other_namespaces())
+    if not clients:
+        pytest.skip(f"none of {sorted(odoo_clients())} is deployed in the cluster")
+    for namespace in clients:
+        assert probe_from(namespace, "odoo.noodle.svc.cluster.local", 8069), f"Odoo is not reachable from {namespace}"
 
 
 def test_probe_detects_open_ports():
