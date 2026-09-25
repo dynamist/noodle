@@ -1,6 +1,7 @@
 # Local Odoo Setup
 
-This guide covers the local Odoo 19 instance for **developing** and **testing**
+This guide covers the local Odoo instance (19, 20, nightly or master, see
+[Odoo Versions](#odoo-versions)) for **developing** and **testing**
 tools against Odoo.
 
 ## Quick Start
@@ -117,7 +118,7 @@ make up
 `ODOO_DEMO_DATA` only has an effect when the database is created, run
 `make reset` after changing it.
 
-Odoo 19 reads every config file option from an `ODOO_<OPTION>` environment
+Odoo reads every config file option from an `ODOO_<OPTION>` environment
 variable, for example `ODOO_WITH_DEMO` or `ODOO_LIST_DB`. Do not add variables
 with such names to the Odoo pod unless you mean to set that option. For the
 same reason the pods set `enableServiceLinks: false`, otherwise Kubernetes
@@ -191,7 +192,7 @@ odooly but an empty recordset in the ORM, which is what `id_of()` handles.
 
 ## Using the API Key
 
-Odoo 19 has three external APIs. The same API key works for all of them.
+Odoo 19 and 20 have three external APIs. The same API key works for all of them.
 XML-RPC and JSON-RPC are deprecated and are planned to be removed in Odoo 22.
 
 **JSON-2** (`/json/2/<model>/<method>`), arguments are the method's keyword
@@ -256,8 +257,8 @@ and `ODOO_API_KEY` for tools under development.
 
 ## How It Works
 
-The `dynamist/odoo` image extends the official `odoo:19.0` image. Its
-entrypoint (`odoo/entrypoint.sh`) runs `odoo/init-odoo.sh` before starting the
+The `dynamist/odoo` image extends the official Odoo image of the selected
+version (see [Odoo Versions](#odoo-versions)). Its entrypoint (`odoo/entrypoint.sh`) runs `odoo/init-odoo.sh` before starting the
 server:
 
 1. **Database:** waits for PostgreSQL, then
@@ -278,6 +279,37 @@ Odoo only generates random API keys, so `odoo/seed/seed_apikeys.py` inserts
 the fixed keys into `res_users_apikeys` itself, hashed the same way as Odoo
 does it. The failed login cooldown (`base.login_cooldown_after`) is turned off
 so tools under development are not locked out.
+
+## Odoo Versions
+
+`make up VERSION=...` builds one of the stages in the `Dockerfile`, chosen by
+`scripts/build-args.sh`:
+
+| `VERSION` | Stage | Source |
+|-----------|-------|--------|
+| `19` (default) | `release-19` | official `odoo:19.0-<date>` image, bumped by Renovate |
+| `20` | `release-20` | official `odoo:20.0-<date>` image, falls back to `20-nightly` until the Dockerfile has that stage |
+| `19-nightly`, `20-nightly` | `nightly` | newest dated deb from `nightly.odoo.com/<series>/nightly/deb/`, installed over the newest released image |
+| `master` | `master` | GitHub tarball of the current `odoo/odoo` master commit, laid out like the deb |
+
+The nightly date and the master commit are resolved at build time and passed
+as build arguments, so a rebuild only downloads Odoo again when upstream
+moved. `master` is unreleased code and breaks now and then, its Python
+dependencies come from its `debian/control` and can be ahead of the base
+image.
+
+The last `VERSION` is kept in `.k8s/version` and reused by a plain `make up`.
+A database belongs to the Odoo series that created it (`base` module version
+`19.0.x`, `20.0.x`, ...). On a mismatch `setup-database.sh` stops with an
+error instead of starting Odoo, run `make reset` to switch.
+
+Differences between the versions are handled in the seed code by feature
+detection rather than version checks, e.g. `set_param()` in
+`seed_common.py`.
+
+CI tests `19` and `20` on every change, and additionally `19-nightly`,
+`20-nightly` and `master` weekly and on manual runs (`master` may fail
+without failing the workflow).
 
 ## Kubernetes Setup
 

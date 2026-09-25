@@ -4,14 +4,15 @@ This file provides guidance to AI coding agents when working with code in this r
 
 ## Project Overview
 
-noodle runs a disposable local Odoo 19 server (image `dynamist/odoo`) with demo data, test users and fixed
-credentials, for developing tools against Odoo. There is no application code, only the container setup, the init and
-seed scripts, and custom modules in `addons/`.
+noodle runs a disposable local Odoo 19 or 20 server, or a nightly or master build (image `dynamist/odoo`), with demo
+data, test users and fixed credentials, for developing tools against Odoo. There is no application code, only the
+container setup, the init and seed scripts, and custom modules in `addons/`.
 
 ## Common Commands
 
 ```bash
 make up                              # create/reuse the k3d cluster, build, deploy, follow logs
+make up VERSION=20                   # 19 (default), 20, 19-nightly, 20-nightly, master (remembered in .k8s/version)
 make down                            # stop, keep data
 make reset                           # delete the noodle namespace and its data
 make destroy                         # delete the shared cluster (FORCE=1 if other apps run)
@@ -56,7 +57,9 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 - `k8s/base` - namespace `noodle`: `postgres` StatefulSet (postgres:17), `odoo` Deployment, Ingress `odoo.localhost`,
   NetworkPolicies, quota. Settings in `config.env`/`secret.env`. Overlays `local` and `ci`
 - `tests/k8s` - smoke, seed data and isolation tests against the deployed instance
-- `Dockerfile` - extends a pinned `odoo:19.0-<date>` image with `odoo/` and `addons/`
+- `Dockerfile` - one stage per Odoo source (`release-19`, `nightly`, `master`), picked by the `BASE` build arg, then
+  adds `odoo/` and `addons/`
+- `scripts/build-args.sh` - maps `VERSION` to the build args, resolving the newest nightly deb or master commit
 - `odoo/entrypoint.sh` - runs `init-odoo.sh` and the banner, then the official `/entrypoint.sh`
 - `odoo/init-odoo.sh` - orchestrator: database setup, then seeding
 - `odoo/lib/` - `common.sh` (defaults, `TEST_USERS`), `setup-database.sh`, `banner.sh`
@@ -80,8 +83,14 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 - Apps share the cluster: only namespaced resources (plus the own Namespace), no host ports, every kubectl call
   passes `--context k3d-dynamist-dev`. Change `k8s/cluster/k3d.yaml` in all repos that use it at once
 
-## Odoo 19 Gotchas
+## Odoo Gotchas
 
+- Seed code runs on 19, 20 and master: detect features (`hasattr`) instead of checking versions, and share the
+  helpers in `seed_common.py`
+- A database only works with the series that created it, `setup-database.sh` refuses others, `make reset` to switch
+- Odoo 20: `ir.config_parameter.set_param()` is gone, use typed `set_str()`/`set_bool()`/`set_int()` (see
+  `seed_common.set_param()`)
+- Odoo 20: bearer API keys must have the route's scope (`rpc`), keys without a scope no longer work there
 - `res.users` groups are `group_ids` (not `groups_id`)
 - Odoo reads config options from `ODOO_<OPTION>` env vars (e.g. `ODOO_WITH_DEMO`), do not name other variables like that
 - `odoo shell` rolls back when the piped script ends, seed code must `env.cr.commit()` (done in `run.py`)

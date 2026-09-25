@@ -1,6 +1,6 @@
 # noodle
 
-A disposable local Odoo 19 server with sample data and well-known credentials,
+A disposable local Odoo 19 or 20 server (or a nightly or master build) with sample data and well-known credentials,
 for developing tools against Odoo (JSON-2, XML-RPC and JSON-RPC clients,
 odooly scripts, custom Dynamist modules).
 
@@ -20,6 +20,25 @@ The first start installs the apps with demo data, which takes a few minutes.
 Odoo is at <http://odoo.localhost>, behind the cluster's Traefik ingress.
 
 `make down` stops Odoo and keeps the data, `make reset` deletes it.
+
+## Odoo Versions
+
+`VERSION` picks the Odoo to build, one at a time in the same namespace:
+
+| `VERSION` | Odoo |
+|-----------|------|
+| `19` (default) | the official `odoo:19.0` image, pinned to a dated build |
+| `20` | the official `odoo:20.0` image, the newest nightly deb until that image is published |
+| `19-nightly`, `20-nightly` | the newest nightly deb of that series from nightly.odoo.com |
+| `master` | the current commit of the `odoo/odoo` master branch |
+
+```bash
+make reset && make up VERSION=20
+```
+
+The last `VERSION` built is kept in `.k8s/version`, a plain `make up` reuses
+it. A database only works with the Odoo series that created it: Odoo refuses to
+start on another one and asks for `make reset`.
 
 ```bash
 make console    # odooly console logged in as admin with the API key
@@ -58,7 +77,7 @@ curl -s http://odoo.localhost/json/2/res.partner/search_read \
 
 | Target | Description |
 |--------|-------------|
-| `make up` | Create or reuse the cluster, build and deploy odoo, follow the logs until it is ready |
+| `make up` | Create or reuse the cluster, build and deploy odoo (`VERSION=20`), follow the logs until it is ready |
 | `make down` | Stop odoo and postgres, keeping the data |
 | `make reset` | **Delete the `noodle` namespace** with all its data |
 | `make destroy` | **Delete the whole cluster**, with every app in it (`FORCE=1` if other apps run) |
