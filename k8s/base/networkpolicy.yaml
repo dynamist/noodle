@@ -1,4 +1,5 @@
-# Nothing reaches noodle pods except Traefik (to Odoo) and Odoo (to Postgres)
+# Nothing reaches noodle pods except Traefik (to Odoo), Odoo (to Postgres)
+# and the dev applications that use the Odoo API.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -24,6 +25,35 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/name: traefik
+      ports:
+        - port: 8069
+---
+# API clients inside the cluster, Dynatron for now. A pod cannot go out
+# through Traefik to come back in: `odoo.localhost` resolves to the pod
+# itself, and reaching Traefik's ClusterIP directly would mean pinning an
+# address that changes when the cluster is recreated. So the clients are
+# named here, where a destination's ingress belongs, rather than worked
+# around at the caller.
+#
+# Namespace-scoped rather than pod-scoped on purpose: it grants the dev
+# namespace, not a particular Deployment, so a second consumer there needs
+# no change. Port 8069 only, which serves JSON-2, XML-RPC and JSON-RPC.
+# Clients use http://odoo.noodle.svc.cluster.local:8069 with the
+# X-Odoo-Database header, Odoo does not check the Host header.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: odoo-from-dev-apps
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: odoo
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: dynatron
       ports:
         - port: 8069
 ---
