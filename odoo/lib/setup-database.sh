@@ -58,6 +58,24 @@ create_database() {
   log "Database created!"
 }
 
+# Series of the installed Odoo, e.g. 19.0, 20.0 or saas~20.1
+odoo_series() {
+  python3 -c 'from odoo.release import serie; print(serie)'
+}
+
+# A database from another series cannot be loaded, only upgraded by Odoo's
+# upgrade service. Fail with a clear message instead of deep in module loading.
+check_series() {
+  local installed series
+  installed=$(psql -tAc "SELECT latest_version FROM ir_module_module WHERE name = 'base'")
+  series=$(odoo_series)
+  if [[ "$installed" != "${series}."* ]]; then
+    log "ERROR: the database was created with Odoo ${installed%.*.*}, this image runs Odoo ${series}"
+    log "ERROR: run 'make reset' to delete the database, then 'make up' again"
+    return 1
+  fi
+}
+
 install_missing_modules() {
   # New modules on disk are not in ir_module_module yet, so compare against
   # the installed ones instead of looking for uninstalled ones
@@ -85,7 +103,7 @@ setup_database() {
   wait_for_db
   case "$(db_state)" in
     absent | partial) create_database ;;
-    ready) install_missing_modules ;;
+    ready) check_series && install_missing_modules ;;
   esac
 }
 
