@@ -1,8 +1,11 @@
 """Odoo answers through the shared Traefik ingress."""
 
 import http.client
+import os
+import re
 from urllib.parse import urlparse
 
+import pytest
 import requests
 from conftest import ADMIN_KEY, ODOO_URL, json2, json2_ok
 
@@ -33,7 +36,7 @@ def test_wrong_api_key_is_rejected():
 
 
 def test_websocket_upgrade():
-    """Odoo 19 serves its bus on /websocket, Traefik must pass the upgrade through."""
+    """Odoo serves its bus on /websocket, Traefik must pass the upgrade through."""
     url = urlparse(ODOO_URL)
     conn = http.client.HTTPConnection(url.hostname, url.port or 80, timeout=30)
     conn.request(
@@ -48,3 +51,12 @@ def test_websocket_upgrade():
         },
     )
     assert conn.getresponse().status == 101
+
+
+def test_odoo_series():
+    """The deployed Odoo is the series of the VERSION it was built from (make passes NOODLE_VERSION)."""
+    match = re.fullmatch(r"(\d+)(-nightly)?", os.environ.get("NOODLE_VERSION", ""))
+    if not match:
+        pytest.skip("no NOODLE_VERSION with a series, e.g. master")
+    response = requests.post(f"{ODOO_URL}/web/webclient/version_info", json={}, timeout=30)
+    assert response.json()["result"]["server_serie"] == f"{match[1]}.0"
