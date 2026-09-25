@@ -1,20 +1,23 @@
 """Fixed, well-known API keys.
 
 Odoo only generates random keys, so the key row is inserted directly, hashed
-the same way as res.users.apikeys._generate() does it.
+the same way as res.users.apikeys._generate() does it. The scope is "rpc", which
+JSON-2 and XML-RPC require. Odoo 19 also accepts keys without a scope there,
+Odoo 20 does not.
 """
 
 from odoo.addons.base.models.res_users import INDEX_SIZE, KEY_CRYPT_CONTEXT, _check_apikey_credentials
 from seed_common import cfg, find_user, log, test_users, user_api_key
 
 KEY_NAME = "noodle fixed development key"
+SCOPE = "rpc"
 
 
 def ensure_key(env, user, key):
     if len(key) < INDEX_SIZE:
         raise SystemExit(f"API key for {user.login} must be at least {INDEX_SIZE} characters")
 
-    owner = _check_apikey_credentials(env.cr, scope="rpc", key=key)
+    owner = _check_apikey_credentials(env.cr, scope=SCOPE, key=key)
     if owner == user.id:
         return
     if owner:
@@ -24,9 +27,9 @@ def ensure_key(env, user, key):
     env.cr.execute(
         """
         INSERT INTO res_users_apikeys (name, user_id, scope, expiration_date, key, index)
-        VALUES (%s, %s, NULL, NULL, %s, %s)
+        VALUES (%s, %s, %s, NULL, %s, %s)
         """,
-        [KEY_NAME, user.id, KEY_CRYPT_CONTEXT.hash(key), key[:INDEX_SIZE]],
+        [KEY_NAME, user.id, SCOPE, KEY_CRYPT_CONTEXT.hash(key), key[:INDEX_SIZE]],
     )
     log(f"API key set for {user.login}")
 
