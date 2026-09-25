@@ -15,6 +15,10 @@ OVERLAY ?= local
 IMAGE := dynamist/odoo
 BUILD_DIR := .k8s
 
+# Odoo to build: 19, 20, 20-nightly or master, see scripts/build-args.sh.
+# Defaults to the last one built, switching needs `make reset`.
+VERSION ?= $(shell cat $(BUILD_DIR)/version 2>/dev/null || echo 19)
+
 # odooly.ini section used by `make console` and `make sample`
 ODOOLY_ENV ?= dev
 # Local port for `make db-forward`
@@ -64,9 +68,11 @@ destroy: check-tools ## DELETE the shared cluster with every app and all data (F
 
 ##@ Odoo
 
-odoo-image: check-tools ## build the odoo image and import it into the cluster
-	docker build -t $(IMAGE):dev .
+odoo-image: check-tools ## build the odoo image of VERSION (19, 20, 20-nightly, master) and import it into the cluster
 	@mkdir -p $(BUILD_DIR)
+	@args=$$(scripts/build-args.sh $(VERSION)) && \
+	docker build $$args -t $(IMAGE):dev .
+	@echo $(VERSION) > $(BUILD_DIR)/version
 	@# Tag by content, so the deployment only rolls out when the image changed
 	@tag=dev-$$(docker image inspect -f '{{.Id}}' $(IMAGE):dev | cut -d: -f2 | cut -c1-12); \
 	docker tag $(IMAGE):dev $(IMAGE):$$tag; \
@@ -84,7 +90,7 @@ deploy: check-tools ## apply the manifests of OVERLAY (local or ci) with the imp
 		> $(BUILD_DIR)/kustomization.yaml
 	mise exec -- kubectl --context $(KUBE_CONTEXT) apply -k $(BUILD_DIR)
 
-up: cluster odoo-image deploy ## start odoo in the cluster and follow its logs until it is ready
+up: cluster odoo-image deploy ## start odoo of VERSION in the cluster and follow its logs until it is ready
 	@$(KUBECTL) rollout status statefulset/postgres --timeout=5m
 	@$(KUBECTL) logs -f deploy/odoo --pod-running-timeout=5m & logs=$$!; \
 	$(KUBECTL) rollout status deploy/odoo --timeout=30m; status=$$?; \
@@ -99,8 +105,9 @@ reset: check-tools ## DELETE the noodle namespace with all its data (other apps 
 logs: check-tools ## follow odoo logs
 	$(KUBECTL) logs -f deploy/odoo
 
-ps: check-tools ## show pods, services, ingress and volumes
+ps: check-tools ## show pods, services, ingress, volumes and the running Odoo version
 	$(KUBECTL) get pods,svc,ingress,pvc
+	@$(KUBECTL) exec deploy/odoo -- odoo --version 2>/dev/null || true
 
 shell: check-tools ## open shell in the odoo pod
 	$(KUBECTL) exec -it deploy/odoo -- /bin/bash
@@ -126,7 +133,7 @@ validate: ## validate the rendered manifests of all overlays
 	done
 
 test-k8s: ## run the smoke, seed data and isolation tests in tests/k8s against the deployed odoo (PYTEST_ARGS="-m 'not slow'" for pytest)
-	mise exec -- uv run --no-project --with pytest --with requests --with pyyaml \
+	NOODLE_VERSION=$(VERSION) mise exec -- uv run --no-project --with pytest --with requests --with pyyaml \
 		pytest tests/k8s -p no:cacheprovider $(PYTEST_ARGS)
 
 ##@ CI
