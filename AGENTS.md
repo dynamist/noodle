@@ -52,7 +52,7 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 
 ## Layout
 
-- `k8s/cluster/k3d.yaml` - shared k3d cluster `dynamist-dev` (Traefik on 127.0.0.1:80/443), identical in every repo
+- `k8s/cluster/k3d.yaml` - shared k3d cluster `dynamist` (Traefik on 127.0.0.1:80/443), identical in every repo
   that uses it
 - `k8s/base` - namespace `noodle`: `postgres` StatefulSet (postgres:17), `odoo` Deployment, Ingress `odoo.localhost`,
   NetworkPolicies, quota. Settings in `config.env`/`secret.env`. Overlays `local` and `ci`
@@ -81,7 +81,7 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
   in values and `id_of()` for many2one fields that may be empty
 - Keep `k8s/base/*.env`, `odoo/lib/common.sh`, `mise.toml`, `odooly.ini` and the docs in sync when changing credentials
 - Apps share the cluster: only namespaced resources (plus the own Namespace), no host ports, every kubectl call
-  passes `--context k3d-dynamist-dev`. Change `k8s/cluster/k3d.yaml` in all repos that use it at once
+  passes `--context k3d-dynamist`. Change `k8s/cluster/k3d.yaml` in all repos that use it at once
 
 ## Odoo Gotchas
 

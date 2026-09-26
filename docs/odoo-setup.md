@@ -13,7 +13,7 @@ mise trust && make tools   # k3d, kubectl and odooly, pinned in mise.toml
 make up
 ```
 
-`make up` creates the shared k3d cluster `dynamist-dev` (or reuses it), builds
+`make up` creates the shared k3d cluster `dynamist` (or reuses it), builds
 the `dynamist/odoo` image, imports it into the cluster, deploys
 `k8s/overlays/local` into the namespace `noodle` and follows the logs until
 Odoo is ready. See [Kubernetes Setup](#kubernetes-setup).
@@ -333,7 +333,7 @@ its own namespace:
 - **Images:** `make odoo-image` builds `dynamist/odoo`, tags it by content and
   imports it with `k3d image import`, no registry is involved.
 
-Every `make` target passes `--context k3d-dynamist-dev`, so it never acts on
+Every `make` target passes `--context k3d-dynamist`, so it never acts on
 another cluster.
 
 ## Useful Commands

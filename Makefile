@@ -4,7 +4,7 @@
 
 # Shared k3d cluster, see k8s/cluster/k3d.yaml. Every kubectl call names the
 # context explicitly so nothing here ever acts on another cluster.
-CLUSTER := dynamist-dev
+CLUSTER := dynamist
 KUBE_CONTEXT := k3d-$(CLUSTER)
 NAMESPACE := noodle
 KUBECTL = mise exec -- kubectl --context $(KUBE_CONTEXT) -n $(NAMESPACE)
