@@ -287,8 +287,8 @@ so tools under development are not locked out.
 
 | `VERSION` | Stage | Source |
 |-----------|-------|--------|
-| `19` (default) | `release-19` | official `odoo:19.0-<date>` image, bumped by Renovate |
-| `20` | `release-20` | official `odoo:20.0-<date>` image, falls back to `20-nightly` until the Dockerfile has that stage |
+| `19` | `release-19` | official `odoo:19.0-<date>` image, bumped by Renovate |
+| `20` (default) | `release-20` | official `odoo:20.0-<date>` image, falls back to `20-nightly` until the Dockerfile has that stage |
 | `19-nightly`, `20-nightly` | `nightly` | newest dated deb from `nightly.odoo.com/<series>/nightly/deb/`, installed over the newest released image |
 | `master` | `master` | GitHub tarball of the current `odoo/odoo` master commit, laid out like the deb |
 
@@ -307,9 +307,10 @@ Differences between the versions are handled in the seed code by feature
 detection rather than version checks, e.g. `set_param()` in
 `seed_common.py`.
 
-CI tests `19` and `20` on every change, and additionally `19-nightly`,
-`20-nightly` and `master` weekly and on manual runs (`master` may fail
-without failing the workflow).
+CI tests `20` on every change. A pull request with the label `ci:odoo-19`,
+`ci:odoo-20` or `ci:odoo-master` tests exactly the labelled versions instead.
+The weekly and manual runs test `19`, `20`, `19-nightly`, `20-nightly` and
+`master` (`master` may fail without failing the workflow).
 
 ## Kubernetes Setup
 

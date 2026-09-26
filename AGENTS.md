@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents when working with code in this r
 
 ## Project Overview
 
-noodle runs a disposable local Odoo 19 or 20 server, or a nightly or master build (image `dynamist/odoo`), with demo
+noodle runs a disposable local Odoo 20 or 19 server, or a nightly or master build (image `dynamist/odoo`), with demo
 data, test users and fixed credentials, for developing tools against Odoo. There is no application code, only the
 container setup, the init and seed scripts, and custom modules in `addons/`.
 
@@ -12,7 +12,7 @@ container setup, the init and seed scripts, and custom modules in `addons/`.
 
 ```bash
 make up                              # create/reuse the k3d cluster, build, deploy, follow logs
-make up VERSION=20                   # 19 (default), 20, 19-nightly, 20-nightly, master (remembered in .k8s/version)
+make up VERSION=19                   # 20 (default), 19, 19-nightly, 20-nightly, master (remembered in .k8s/version)
 make down                            # stop, keep data
 make reset                           # delete the noodle namespace and its data
 make destroy                         # delete the shared cluster (FORCE=1 if other apps run)

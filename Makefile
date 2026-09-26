@@ -17,7 +17,7 @@ BUILD_DIR := .k8s
 
 # Odoo to build: 19, 20, 20-nightly or master, see scripts/build-args.sh.
 # Defaults to the last one built, switching needs `make reset`.
-VERSION ?= $(shell cat $(BUILD_DIR)/version 2>/dev/null || echo 19)
+VERSION ?= $(shell cat $(BUILD_DIR)/version 2>/dev/null || echo 20)
 
 # odooly.ini section used by `make console` and `make sample`
 ODOOLY_ENV ?= dev

@@ -3,6 +3,8 @@ name: Kubernetes
 
 on:
   pull_request:
+    # labeled and unlabeled for the ci:odoo-* labels, see the deploy matrix
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches:
       - main
@@ -11,8 +13,13 @@ on:
     - cron: "0 4 * * 1"
   workflow_dispatch:
 
+# A label other than ci:odoo-* gets a group of its own, so it does not cancel
+# the running tests only to skip everything itself
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  group: >-
+    ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}${{
+    contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) &&
+    !startsWith(github.event.label.name, 'ci:odoo-') && format('-{0}', github.run_id) || '' }}
   cancel-in-progress: true
 
 permissions:
@@ -25,24 +32,50 @@ jobs:
   validate:
     name: Validate manifests
     runs-on: ubuntu-latest
+    # Other labels do not change what runs
+    if: >-
+      !contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) ||
+      startsWith(github.event.label.name, 'ci:odoo-')
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
       - run: make validate
 
+  versions:
+    name: Pick the Odoo versions
+    runs-on: ubuntu-latest
+    needs: validate
+    outputs:
+      versions: ${{ steps.pick.outputs.versions }}
+    steps:
+      # Odoo 20 on every change (the nightly deb until its image is out), or
+      # the versions of the ci:odoo-19, ci:odoo-20 and ci:odoo-master labels
+      # on a pull request. Every build weekly and on demand
+      - id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          if [ "$EVENT" = schedule ] || [ "$EVENT" = workflow_dispatch ]; then
+            versions='["19", "20", "19-nightly", "20-nightly", "master"]'
+          else
+            versions=$(jq -c '[.[]? | select(IN("ci:odoo-19", "ci:odoo-20", "ci:odoo-master"))
+              | ltrimstr("ci:odoo-")] | if . == [] then ["20"] else . end' <<<"$LABELS")
+          fi
+          echo "Odoo versions: $versions"
+          echo "versions=$versions" >>"$GITHUB_OUTPUT"
+
   deploy:
     name: Deploy and test Odoo ${{ matrix.version }} in k3d
     runs-on: ubuntu-latest
-    needs: validate
+    needs: [validate, versions]
     timeout-minutes: 60
     # master is not released, its breakage is a heads-up rather than a failure
     continue-on-error: ${{ matrix.version == 'master' }}
     strategy:
       fail-fast: false
       matrix:
-        # Released Odoo on every change (20 is the nightly deb until its image is
-        # out), the moving builds weekly and on demand
-        version: ${{ fromJSON((github.event_name == 'pull_request' || github.event_name == 'push') && '["19", "20"]' || '["19", "20", "19-nightly", "20-nightly", "master"]') }}
+        version: ${{ fromJSON(needs.versions.outputs.versions) }}
     env:
       VERSION: ${{ matrix.version }}
     steps:
