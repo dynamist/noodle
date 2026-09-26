@@ -48,7 +48,7 @@ make console    # odooly console logged in as admin with the API key
 make test-k8s   # run the smoke, seed data and isolation tests
 ```
 
-The k3d cluster `dynamist-dev` can be shared with other Dynamist dev apps.
+The k3d cluster `dynamist` can be shared with other Dynamist dev apps.
 Each app lives in its own namespace, see
 [Kubernetes Setup](docs/odoo-setup.md#kubernetes-setup).
 

@@ -20,7 +20,7 @@ import seed_common  # noqa: E402
 ODOO_URL = os.environ.get("ODOO_URL", "http://odoo.localhost")
 DATABASE = "odoo"
 ADMIN_KEY = "odoo-supersecr3tapikeyfordevelop1"
-KUBE_CONTEXT = "k3d-dynamist-dev"
+KUBE_CONTEXT = "k3d-dynamist"
 NAMESPACE = "noodle"
 
 
