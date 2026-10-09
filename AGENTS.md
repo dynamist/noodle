@@ -73,6 +73,8 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 ## Conventions
 
 - Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`), default branch `main`
+- Work on a branch and open a pull request, do not push to `main`. CI tests only Odoo 20 on a pull request, add the
+  labels `ci:odoo-19`, `ci:odoo-20` and `ci:odoo-master` to test exactly those versions instead
 - Init and seed steps must be idempotent (check, then create or update) since they run on every start. Shell modules
   in `odoo/lib/` must also run on their own.
 - Sample data goes in a dataset file in `odoo/seed/datasets/`, declaring its Odoo `modules` and the datasets it
