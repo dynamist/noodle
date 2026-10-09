@@ -24,7 +24,17 @@ nightly() {
     exit 1
   fi
   log "Odoo ${series} nightly ${release}"
-  echo "--build-arg BASE=nightly --build-arg NOODLE_SERIES=${series} --build-arg NOODLE_RELEASE=${release}"
+  local args="--build-arg BASE=nightly --build-arg NOODLE_SERIES=${series} --build-arg NOODLE_RELEASE=${release}"
+  # Over the released image of the same series when there is one, apt does not
+  # downgrade the odoo package of a newer one
+  if has_release "${series%.0}"; then
+    args+=" --build-arg NIGHTLY_BASE=release-${series%.0}"
+  fi
+  echo "$args"
+}
+
+has_release() {
+  grep -qE "^FROM .* AS release-$1\$" "${root}/Dockerfile"
 }
 
 git_commit() {
@@ -43,7 +53,7 @@ case "$version" in
     nightly "${version%-nightly}.0"
     ;;
   [0-9] | [0-9][0-9])
-    if grep -qE "^FROM .* AS release-${version}\$" "${root}/Dockerfile"; then
+    if has_release "$version"; then
       log "Odoo ${version} released image"
       echo "--build-arg BASE=release-${version}"
     else

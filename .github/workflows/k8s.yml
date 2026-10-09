@@ -48,9 +48,9 @@ jobs:
     outputs:
       versions: ${{ steps.pick.outputs.versions }}
     steps:
-      # Odoo 20 on every change (the nightly deb until its image is out), or
-      # the versions of the ci:odoo-19, ci:odoo-20 and ci:odoo-master labels
-      # on a pull request. Every build weekly and on demand
+      # Odoo 20 on every change, or the versions of the ci:odoo-19,
+      # ci:odoo-20 and ci:odoo-master labels on a pull request. Every build
+      # weekly and on demand
       - id: pick
         env:
           EVENT: ${{ github.event_name }}

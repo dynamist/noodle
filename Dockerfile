@@ -4,14 +4,18 @@
 # Released images are pinned to a dated build so the code matches the schema in
 # the persisted database. After bumping, run `make reset` (or update modules
 # with -u all). A different series always needs `make reset`.
-# The stage to build on, an ARG before the first FROM so FROM can use it
-ARG BASE=release-19
+# The stage to build on, and the released image a nightly deb is installed
+# over, ARGs before the first FROM so FROM can use them
+ARG BASE=release-20
+ARG NIGHTLY_BASE=release-20
 
 FROM odoo:19.0-20260908 AS release-19
+FROM odoo:20.0-20260926 AS release-20
 
 # The newest dated nightly deb of a series from nightly.odoo.com, installed over
-# the newest released image, which brings the system packages and entrypoint
-FROM release-19 AS nightly
+# the released image of that series (or the newest one), which brings the
+# system packages and entrypoint
+FROM ${NIGHTLY_BASE} AS nightly
 ARG NOODLE_SERIES
 ARG NOODLE_RELEASE
 USER root
@@ -24,7 +28,7 @@ ENV ODOO_VERSION=${NOODLE_SERIES}
 
 # A commit of odoo/odoo (usually master) from git. Laid out like the deb: the
 # addons merged into odoo/addons, the package in place of the packaged one.
-FROM release-19 AS master
+FROM release-20 AS master
 ARG NOODLE_COMMIT
 USER root
 RUN curl -fsSL "https://github.com/odoo/odoo/archive/${NOODLE_COMMIT}.tar.gz" | tar -xz -C /opt \

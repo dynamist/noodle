@@ -288,8 +288,8 @@ so tools under development are not locked out.
 | `VERSION` | Stage | Source |
 |-----------|-------|--------|
 | `19` | `release-19` | official `odoo:19.0-<date>` image, bumped by Renovate |
-| `20` (default) | `release-20` | official `odoo:20.0-<date>` image, falls back to `20-nightly` until the Dockerfile has that stage |
-| `19-nightly`, `20-nightly` | `nightly` | newest dated deb from `nightly.odoo.com/<series>/nightly/deb/`, installed over the newest released image |
+| `20` (default) | `release-20` | official `odoo:20.0-<date>` image, bumped by Renovate |
+| `19-nightly`, `20-nightly` | `nightly` | newest dated deb from `nightly.odoo.com/<series>/nightly/deb/`, installed over the released image of that series |
 | `master` | `master` | GitHub tarball of the current `odoo/odoo` master commit, laid out like the deb |
 
 The nightly date and the master commit are resolved at build time and passed

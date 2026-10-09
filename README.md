@@ -30,7 +30,7 @@ Odoo is at <http://odoo.localhost>, behind the cluster's Traefik ingress.
 
 | `VERSION` | Odoo |
 |-----------|------|
-| `20` (default) | the official `odoo:20.0` image, the newest nightly deb until that image is published |
+| `20` (default) | the official `odoo:20.0` image, pinned to a dated build |
 | `19` | the official `odoo:19.0` image, pinned to a dated build |
 | `19-nightly`, `20-nightly` | the newest nightly deb of that series from nightly.odoo.com |
 | `master` | the current commit of the `odoo/odoo` master branch |
