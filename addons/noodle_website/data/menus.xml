@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menus under website.main_menu are copied to every website -->
+    <record id="menu_about" model="website.menu">
+        <field name="name">About</field>
+        <field name="page_id" ref="about_page"/>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence" type="int">50</field>
+    </record>
+</odoo>

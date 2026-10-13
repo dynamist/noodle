@@ -1,4 +1,4 @@
-.PHONY: help check-tools tools cluster destroy odoo-image deploy up down reset logs ps shell creds seed sample validate test-k8s ci-deploy ci-test odoo-shell psql db-forward console
+.PHONY: help check-tools tools cluster destroy odoo-image deploy up down reset logs ps shell creds seed upgrade sample validate test-k8s ci-deploy ci-test odoo-shell psql db-forward console
 
 .DEFAULT_GOAL := help
 
@@ -120,6 +120,11 @@ seed: check-tools ## copy odoo/seed into odoo and re-run seeding (STEPS=users,ap
 		$(KUBECTL) exec -i deploy/odoo -- sh -c 'rm -rf /tmp/noodle-seed && mkdir /tmp/noodle-seed && tar -x -C /tmp/noodle-seed'
 	$(KUBECTL) exec deploy/odoo -- env NOODLE_SEED_DIR=/tmp/noodle-seed SEED_STEPS=$(STEPS) SEED_DATASETS=$(DATASETS) \
 		/opt/noodle/init-odoo.sh --seed-only
+
+upgrade: check-tools ## copy addons/ into odoo and upgrade the changed modules, install missing ones (no restart)
+	tar -C addons --exclude=__pycache__ -c . | \
+		$(KUBECTL) exec -i deploy/odoo -- sh -c 'find /mnt/dynamist-addons -mindepth 1 -delete && tar -x -C /mnt/dynamist-addons'
+	$(KUBECTL) exec deploy/odoo -- /opt/noodle/lib/setup-database.sh
 
 sample: ## load sample datasets through the API with odooly (DATASETS=crm to limit, ODOOLY_ENV)
 	NOODLE_SEED_DIR=$(CURDIR)/odoo/seed SEED_DATASETS=$(DATASETS) mise exec -- odooly --env $(ODOOLY_ENV) < odoo/seed/run_odooly.py

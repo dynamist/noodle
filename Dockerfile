@@ -52,7 +52,8 @@ ENV LANG=C.UTF-8
 COPY --chmod=0644 odoo/odoo.conf /etc/odoo/odoo.conf
 # Custom Dynamist modules, install them by adding them to ODOO_MODULES.
 # Not /mnt/extra-addons, which is a volume in the base image and would go stale.
-COPY addons/ /mnt/dynamist-addons/
+# Owned by odoo, so `make upgrade` can replace them in the running pod.
+COPY --chown=odoo addons/ /mnt/dynamist-addons/
 COPY --chmod=0755 odoo/entrypoint.sh odoo/init-odoo.sh /opt/noodle/
 COPY --chmod=0755 odoo/lib/ /opt/noodle/lib/
 COPY odoo/seed/ /opt/noodle/seed/

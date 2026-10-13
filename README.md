@@ -20,7 +20,8 @@ make up                    # create the cluster, build and deploy odoo, follow l
 ```
 
 The first start installs the apps with demo data, which takes a few minutes.
-Odoo is at <http://odoo.localhost>, behind the cluster's Traefik ingress.
+Odoo is at <http://odoo.localhost/odoo> and its public website at
+<http://odoo.localhost/>, behind the cluster's Traefik ingress.
 
 `make down` stops Odoo and keeps the data, `make reset` deletes it.
 
@@ -87,6 +88,7 @@ curl -s http://odoo.localhost/json/2/res.partner/search_read \
 | `make logs` / `make ps` | Follow odoo logs / show pods, ingress and volumes |
 | `make creds` | Print the credentials of the running odoo |
 | `make seed` | Copy `odoo/seed` into the pod and re-run seeding (`STEPS=users,apikeys`, `DATASETS=crm` to limit) |
+| `make upgrade` | Copy `addons/` into the pod and upgrade the changed modules, without a restart |
 | `make sample` | Load the sample datasets through the API with odooly (`DATASETS=crm` to limit) |
 | `make shell` / `make odoo-shell` / `make psql` | bash, Odoo Python shell or psql in the odoo pod |
 | `make db-forward` | Forward PostgreSQL to `127.0.0.1:5432` |
@@ -98,7 +100,10 @@ curl -s http://odoo.localhost/json/2/res.partner/search_read \
 
 Put Dynamist modules in [`addons/`](addons/) and add them to `ODOO_MODULES`.
 They are built into the `dynamist/odoo` image and installed on the next
-`make up`.
+`make up`. `make upgrade` loads changes to them into the running Odoo.
+
+The public website is the `noodle_website` module, see
+[`addons/README.md`](addons/README.md) for how to change it.
 
 ## License
 

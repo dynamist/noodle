@@ -20,6 +20,19 @@ def test_login_page():
     assert requests.get(f"{ODOO_URL}/web/login", timeout=30).status_code == 200
 
 
+def test_website_homepage():
+    """The public website serves the homepage of addons/noodle_website."""
+    response = requests.get(f"{ODOO_URL}/", timeout=30)
+    assert response.status_code == 200
+    assert "o_noodle_hero" in response.text
+
+
+def test_website_about_page():
+    response = requests.get(f"{ODOO_URL}/about", timeout=30)
+    assert response.status_code == 200
+    assert 'href="/about"' in requests.get(f"{ODOO_URL}/", timeout=30).text
+
+
 def test_unknown_host_is_not_routed():
     host = urlparse(ODOO_URL).hostname
     response = requests.get(ODOO_URL.replace(host, "127.0.0.1"), headers={"Host": "nope.localhost"}, timeout=30)

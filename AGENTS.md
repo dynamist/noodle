@@ -18,6 +18,7 @@ make reset                           # delete the noodle namespace and its data
 make destroy                         # delete the shared cluster (FORCE=1 if other apps run)
 make logs / make ps
 make seed STEPS=users,apikeys        # copy odoo/seed into the pod and re-run seed steps (DATASETS=crm)
+make upgrade                         # copy addons/ into the pod, upgrade the changed modules (no restart)
 make sample DATASETS=crm             # load sample datasets through the API with odooly
 make shell / make odoo-shell / make psql / make db-forward
 make console                         # odooly as admin (ODOOLY_ENV=<odooly.ini section>)
@@ -67,7 +68,10 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
   `sample` step. `make seed` copies it into the pod, so it needs no rebuild
 - `odoo/seed/datasets/` - sample datasets (`@dataset` from `seed_datasets.py`), run by the `sample` step and by
   `make sample` (`run_odooly.py` piped into odooly)
-- `addons/` - custom Dynamist modules, installed when listed in `ODOO_MODULES`
+- `addons/` - custom Dynamist modules, installed when listed in `ODOO_MODULES`, upgraded on start when their files
+  changed (`make upgrade` without a restart)
+- `addons/noodle_website` - the public website at `http://odoo.localhost/` (backend at `/odoo`): homepage, pages,
+  menus and SCSS as code, see `addons/README.md`
 - `mise.toml` / `odooly.ini` - pinned odooly and its connection sections
 
 ## Conventions
@@ -81,6 +85,7 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
   builds on (`after`). Records use `ensure_record()` with `__noodle__.<name>` xmlids and are only created when missing
 - Datasets run under both the Odoo ORM and odooly: do not import `odoo`, use the `seed_datasets` helpers, plain ids
   in values and `id_of()` for many2one fields that may be empty
+- Website changes go in `addons/noodle_website`, not only in the website editor (edits there live in the database)
 - Keep `k8s/base/*.env`, `odoo/lib/common.sh`, `mise.toml`, `odooly.ini` and the docs in sync when changing credentials
 - Apps share the cluster: only namespaced resources (plus the own Namespace), no host ports, every kubectl call
   passes `--context k3d-dynamist`. Change `k8s/cluster/k3d.yaml` in all repos that use it at once
