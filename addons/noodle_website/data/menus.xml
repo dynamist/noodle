@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Menus under website.main_menu are copied to every website -->
+    <!-- Menus under website.main_menu are copied to every website. Set the url,
+         not page_id: Odoo 19 keeps the default url "#" when only page_id is set -->
     <record id="menu_about" model="website.menu">
         <field name="name">About</field>
-        <field name="page_id" ref="about_page"/>
+        <field name="url">/about</field>
         <field name="parent_id" ref="website.main_menu"/>
         <field name="sequence" type="int">50</field>
     </record>
