@@ -9,6 +9,7 @@
     "data": [
         "views/homepage.xml",
         "views/pages.xml",
+        "views/contact.xml",
         "data/menus.xml",
     ],
     "assets": {

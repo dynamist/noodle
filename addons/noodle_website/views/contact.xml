@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The website templates hard-code a placeholder phone number. The
+         number is +46 (0)8-DYNAMI, dialled as +468396264 (DYNAMI on a keypad) -->
+
+    <template id="footer_custom" inherit_id="website.footer_custom" name="noodle Footer Contact">
+        <xpath expr="//a[starts-with(@href, 'tel:')]" position="attributes">
+            <attribute name="href">tel:+468396264</attribute>
+        </xpath>
+        <xpath expr="//a[@href='tel:+468396264']/span" position="replace">
+            <span class="o_force_ltr">+46 (0)8-DYNAMI</span>
+        </xpath>
+    </template>
+
+    <template id="header_text_element" inherit_id="website.header_text_element" name="noodle Header Contact">
+        <xpath expr="//t[@t-elif=&quot;_txt_elt_content == 'phone_mail'&quot;]//a[starts-with(@href, 'tel:')]" position="attributes">
+            <attribute name="href">tel:+468396264</attribute>
+        </xpath>
+        <xpath expr="//t[@t-elif=&quot;_txt_elt_content == 'phone_mail'&quot;]//span[hasclass('o_force_ltr')]" position="replace">
+            <span class="o_force_ltr">+46 (0)8-DYNAMI</span>
+        </xpath>
+        <xpath expr="//t[@t-elif=&quot;_txt_elt_content == 'mail_stretched'&quot;]//a[starts-with(@href, 'tel:')]" position="attributes">
+            <attribute name="href">tel:+468396264</attribute>
+        </xpath>
+        <xpath expr="//t[@t-elif=&quot;_txt_elt_content == 'mail_stretched'&quot;]//span[hasclass('o_force_ltr')]" position="replace">
+            <span class="o_force_ltr"><small>+46 (0)8-DYNAMI</small></span>
+        </xpath>
+        <xpath expr="//t[@t-else]//a[starts-with(@href, 'tel:')]" position="attributes">
+            <attribute name="href">tel:+468396264</attribute>
+        </xpath>
+        <xpath expr="//t[@t-else]//span[hasclass('o_force_ltr')]" position="replace">
+            <span class="o_force_ltr"><small>+46 (0)8-DYNAMI</small></span>
+        </xpath>
+    </template>
+</odoo>
