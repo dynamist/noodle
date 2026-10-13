@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- A page is a QWeb view plus a website.page record giving it a URL -->
+    <template id="about" name="About">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure">
+                <section class="pt48 pb48">
+                    <div class="container">
+                        <h1>About</h1>
+                        <p>This website is managed as code in the noodle_website module of noodle.</p>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+
+    <record id="about_page" model="website.page">
+        <field name="url">/about</field>
+        <field name="view_id" ref="about"/>
+        <field name="is_published">True</field>
+        <field name="website_meta_description">About the noodle website</field>
+    </record>
+</odoo>

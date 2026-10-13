@@ -23,6 +23,10 @@ installed_apps() {
     WHERE state = 'installed' AND application" 2>/dev/null || true
 }
 
+module_installed() {
+  [ "$(psql -tAc "SELECT state FROM ir_module_module WHERE name = '$1'" 2>/dev/null)" = "installed" ]
+}
+
 installed_count() {
   psql -tAc "SELECT count(*) FROM ir_module_module WHERE state = 'installed'" 2>/dev/null || true
 }
@@ -62,7 +66,12 @@ print_banner() {
   fi
   echo ""
   echo "🌍 Your new Odoo is waiting for you at:"
-  echo "   $ODOO_URL"
+  echo "   ${ODOO_URL}/odoo"
+  if module_installed website; then
+    echo ""
+    echo "🌐 The public website is at:"
+    echo "   ${ODOO_URL}/"
+  fi
   echo ""
   echo "💡 TIP: Try the JSON-2 API with the API key:"
   echo "   curl -s ${ODOO_URL}/json/2/res.users/context_get \\"

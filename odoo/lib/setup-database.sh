@@ -99,12 +99,61 @@ install_missing_modules() {
   odoo -d "$PGDATABASE" -i "$modules" --stop-after-init --no-http
 }
 
+# Installed modules from the Dynamist addons directory
+installed_addons() {
+  local installed manifest module
+  installed=$(psql -tAc "SELECT name FROM ir_module_module WHERE state = 'installed'")
+  for manifest in "$ADDONS_DIR"/*/__manifest__.py; do
+    [ -e "$manifest" ] || continue
+    module=$(basename "$(dirname "$manifest")")
+    if grep -qxF "$module" <<< "$installed"; then
+      echo "$module"
+    fi
+  done
+}
+
+# Checksum of the files of the given modules in the addons directory
+addons_hash() {
+  if [ $# -eq 0 ]; then
+    echo none
+    return
+  fi
+  (cd "$ADDONS_DIR" && find "$@" -type f ! -path '*/__pycache__/*' -print0 | sort -z | xargs -0 -r sha256sum) |
+    sha256sum | cut -d' ' -f1
+}
+
+record_addons_hash() {
+  local modules
+  mapfile -t modules < <(installed_addons)
+  addons_hash "${modules[@]}" > "$ADDONS_HASH_FILE"
+}
+
+# Odoo only loads the data and views of an installed module again on an
+# upgrade, so upgrade the Dynamist modules whose files changed since the last start
+upgrade_changed_addons() {
+  local modules
+  mapfile -t modules < <(installed_addons)
+  if [ ${#modules[@]} -eq 0 ]; then
+    return
+  fi
+  if [ "$(addons_hash "${modules[@]}")" = "$(cat "$ADDONS_HASH_FILE" 2>/dev/null)" ]; then
+    log "Dynamist modules unchanged, skipping upgrade..."
+    return
+  fi
+
+  local list
+  list=$(IFS=,; echo "${modules[*]}")
+  log "Upgrading Dynamist modules: ${list}"
+  odoo -d "$PGDATABASE" -u "$list" --stop-after-init --no-http
+}
+
 setup_database() {
   wait_for_db
   case "$(db_state)" in
     absent | partial) create_database ;;
-    ready) check_series && install_missing_modules ;;
+    ready) check_series && upgrade_changed_addons && install_missing_modules ;;
   esac
+  record_addons_hash
 }
 
 # If script is run directly (not sourced), execute setup

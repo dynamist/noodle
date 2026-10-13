@@ -15,10 +15,13 @@ export ODOO_USER="${ODOO_USER:-admin}"
 export ODOO_PASSWORD="${ODOO_PASSWORD:-supersecr3tpassw0rdfordevelop1}"
 export ODOO_API_KEY="${ODOO_API_KEY:-odoo-supersecr3tapikeyfordevelop1}"
 export ODOO_USERS_PASSWORD="${ODOO_USERS_PASSWORD:-supersecr3tpassw0rdfordevelop1}"
-export ODOO_MODULES="${ODOO_MODULES:-contacts,crm,sale_management,account,stock,project,hr}"
+export ODOO_MODULES="${ODOO_MODULES:-contacts,crm,sale_management,account,stock,project,hr,website,noodle_website}"
 export ODOO_DEMO_DATA="${ODOO_DEMO_DATA:-true}"
 
 NOODLE_HOME="${NOODLE_HOME:-/opt/noodle}"
+# Custom Dynamist modules, and the checksum of the installed ones at the last upgrade
+export ADDONS_DIR="${ADDONS_DIR:-/mnt/dynamist-addons}"
+export ADDONS_HASH_FILE="${ADDONS_HASH_FILE:-/var/lib/odoo/noodle-addons-${PGDATABASE}.sha256}"
 export NOODLE_SEED_DIR="${NOODLE_SEED_DIR:-${NOODLE_HOME}/seed}"
 
 # Suffix of the per-user API keys, the key is "<first name>-<suffix>"

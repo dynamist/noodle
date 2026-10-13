@@ -110,7 +110,7 @@ make up
 | `ODOO_API_KEY` | `odoo-supersecr3tapikeyfordevelop1` | Admin API key (secret) |
 | `ODOO_USERS_PASSWORD` | `supersecr3tpassw0rdfordevelop1` | Password of the test users (secret) |
 | `ODOO_ADMIN_PASSWD` | `supersecr3tmasterpassw0rdfordevelop1` | Master password, database manager (secret) |
-| `ODOO_MODULES` | `contacts,crm,sale_management,account,stock,project,hr` | Modules to install |
+| `ODOO_MODULES` | `contacts,crm,sale_management,account,stock,project,hr,website,noodle_website` | Modules to install |
 | `ODOO_DEMO_DATA` | `true` | Load demo data when the database is created |
 | `PGUSER` / `POSTGRES_USER` | `odoo` | PostgreSQL user (secret) |
 | `PGPASSWORD` / `POSTGRES_PASSWORD` | `supersecr3tpassw0rdfordatabase1` | PostgreSQL password (secret) |
@@ -129,15 +129,18 @@ would inject `ODOO_PORT` and similar variables for the `odoo` Service.
 Modules in `addons/` are copied into the `dynamist/odoo` image at
 `/mnt/dynamist-addons`, which is on the addons path. Add a module to
 `ODOO_MODULES` to install it, modules that are not installed yet are installed
-on every start. To update an installed module after changing it:
+on every start. Every start also upgrades the installed modules from `addons/`
+whose files changed since the last upgrade (a checksum in
+`/var/lib/odoo/noodle-addons-<database>.sha256`). To load changed views, data
+and assets without a restart:
 
 ```bash
-make shell
-odoo -d odoo -u dynamist_foo --stop-after-init --no-http --db_host postgres
+make upgrade
 ```
 
-Until `addons/` contains a module, Odoo logs a warning that
-`/mnt/dynamist-addons` is not a valid addons directory. It is harmless.
+It copies `addons/` into the running pod and runs the same upgrade. Python code
+needs `make up`, Odoo only imports it on start. See
+[`addons/README.md`](../addons/README.md) for the website module.
 
 ### Adding Sample Data
 
@@ -265,6 +268,7 @@ server:
    - creates the database with `odoo -i $ODOO_MODULES --with-demo` if it does
      not exist,
    - drops and recreates it if an earlier first start was interrupted,
+   - upgrades the installed modules from `addons/` whose files changed,
    - installs modules from `ODOO_MODULES` that are not installed yet.
 2. **Seeding:** pipes `odoo/seed/run.py` into `odoo shell`, which runs the
    seed steps `admin`, `users`, `apikeys` and `sample` (the datasets in
@@ -347,6 +351,7 @@ make logs / make ps             # follow odoo logs / show pods, ingress, volumes
 make creds                      # print credentials
 make seed                       # copy odoo/seed into the pod and re-run all seed steps
 make seed STEPS=users,apikeys   # re-run some seed steps
+make upgrade                    # copy addons/ into the pod, upgrade the changed modules
 make sample DATASETS=crm        # load sample datasets through the API with odooly
 make shell                      # bash in the odoo pod
 make odoo-shell                 # Odoo Python shell with env

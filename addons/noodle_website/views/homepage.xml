@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Content of the homepage, website.homepage itself is an empty #wrap -->
+    <template id="homepage" inherit_id="website.homepage" name="noodle Homepage">
+        <xpath expr="//div[@id='wrap']" position="inside">
+            <section class="o_noodle_hero pt96 pb96">
+                <div class="container">
+                    <h1>noodle</h1>
+                    <p class="lead">A disposable Odoo for developing tools against Odoo.</p>
+                    <a href="/about" class="btn btn-primary">About</a>
+                </div>
+            </section>
+        </xpath>
+    </template>
+</odoo>
