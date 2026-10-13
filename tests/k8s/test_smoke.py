@@ -38,9 +38,15 @@ def test_website_contact_details():
 
 
 def test_website_about_page():
-    response = requests.get(f"{ODOO_URL}/about", timeout=30)
+    response = requests.get(f"{ODOO_URL}/about", timeout=30, allow_redirects=False)
     assert response.status_code == 200
-    assert 'href="/about"' in requests.get(f"{ODOO_URL}/", timeout=30).text
+    assert "managed as code in the noodle_website module" in response.text
+
+
+def test_website_about_menu():
+    """The main menu links to the About page, not only the homepage button."""
+    text = requests.get(f"{ODOO_URL}/", timeout=30).text
+    assert re.search(r'<a role="menuitem" href="/about"[^>]*>\s*<span>About</span>', text)
 
 
 def test_unknown_host_is_not_routed():
