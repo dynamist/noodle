@@ -15,6 +15,7 @@ sys.path.insert(0, os.environ.get("NOODLE_SEED_DIR", "/opt/noodle/seed"))
 import seed_admin  # noqa: E402
 import seed_apikeys  # noqa: E402
 import seed_datasets  # noqa: E402
+import seed_mcp  # noqa: E402
 import seed_users  # noqa: E402
 
 env = globals()["env"]  # injected by `odoo shell`
@@ -23,6 +24,7 @@ STEPS = {
     "admin": seed_admin.run,
     "users": seed_users.run,
     "apikeys": seed_apikeys.run,
+    "mcp": seed_mcp.run,
     "sample": seed_datasets.run,
 }
 

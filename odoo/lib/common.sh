@@ -14,9 +14,20 @@ export ODOO_URL="${ODOO_URL:-http://odoo.localhost}"
 export ODOO_USER="${ODOO_USER:-admin}"
 export ODOO_PASSWORD="${ODOO_PASSWORD:-supersecr3tpassw0rdfordevelop1}"
 export ODOO_API_KEY="${ODOO_API_KEY:-odoo-supersecr3tapikeyfordevelop1}"
+# Admin API key with the MCP scope, seeded only when ai_mcp (Enterprise) is installed
+export ODOO_MCP_KEY="${ODOO_MCP_KEY:-odoo-supersecr3tmcpkeyfordevelop1}"
 export ODOO_USERS_PASSWORD="${ODOO_USERS_PASSWORD:-supersecr3tpassw0rdfordevelop1}"
 export ODOO_MODULES="${ODOO_MODULES:-contacts,crm,sale_management,account,stock,project,hr}"
 export ODOO_DEMO_DATA="${ODOO_DEMO_DATA:-true}"
+# Set by the image when built with ENTERPRISE (see the Dockerfile). This file
+# can be sourced more than once, add each module only once.
+IFS=',' read -ra _enterprise_modules <<< "${NOODLE_ENTERPRISE_MODULES:-}"
+for _module in "${_enterprise_modules[@]}"; do
+  if [[ ",${ODOO_MODULES}," != *",${_module},"* ]]; then
+    ODOO_MODULES="${ODOO_MODULES},${_module}"
+  fi
+done
+unset _enterprise_modules _module
 
 NOODLE_HOME="${NOODLE_HOME:-/opt/noodle}"
 export NOODLE_SEED_DIR="${NOODLE_SEED_DIR:-${NOODLE_HOME}/seed}"

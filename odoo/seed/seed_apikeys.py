@@ -13,25 +13,25 @@ KEY_NAME = "noodle fixed development key"
 SCOPE = "rpc"
 
 
-def ensure_key(env, user, key):
+def ensure_key(env, user, key, scope=SCOPE, name=KEY_NAME):
     if len(key) < INDEX_SIZE:
         raise SystemExit(f"API key for {user.login} must be at least {INDEX_SIZE} characters")
 
-    owner = _check_apikey_credentials(env.cr, scope=SCOPE, key=key)
+    owner = _check_apikey_credentials(env.cr, scope=scope, key=key)
     if owner == user.id:
         return
     if owner:
         raise SystemExit(f"API key for {user.login} already belongs to user id {owner}")
 
-    env.cr.execute("DELETE FROM res_users_apikeys WHERE user_id = %s AND name = %s", [user.id, KEY_NAME])
+    env.cr.execute("DELETE FROM res_users_apikeys WHERE user_id = %s AND name = %s", [user.id, name])
     env.cr.execute(
         """
         INSERT INTO res_users_apikeys (name, user_id, scope, expiration_date, key, index)
         VALUES (%s, %s, %s, NULL, %s, %s)
         """,
-        [KEY_NAME, user.id, SCOPE, KEY_CRYPT_CONTEXT.hash(key), key[:INDEX_SIZE]],
+        [name, user.id, scope, KEY_CRYPT_CONTEXT.hash(key), key[:INDEX_SIZE]],
     )
-    log(f"API key set for {user.login}")
+    log(f"API key ({scope}) set for {user.login}")
 
 
 def run(env):

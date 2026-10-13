@@ -18,6 +18,11 @@ BUILD_DIR := .k8s
 # Odoo to build: 19, 20, 20-nightly or master, see scripts/build-args.sh.
 # Defaults to the last one built, switching needs `make reset`.
 VERSION ?= $(shell cat $(BUILD_DIR)/version 2>/dev/null || echo 20)
+# Directory of Odoo Enterprise modules matching VERSION (e.g. a checkout of
+# odoo/enterprise), built into the image with the MCP server ai_mcp. Defaults to
+# the last one built, ENTERPRISE= builds Community again (needs `make reset`).
+ENTERPRISE ?= $(shell cat $(BUILD_DIR)/enterprise 2>/dev/null)
+ENTERPRISE_MODULES := ai_mcp
 
 # odooly.ini section used by `make console` and `make sample`
 ODOOLY_ENV ?= dev
@@ -68,11 +73,18 @@ destroy: check-tools ## DELETE the shared cluster with every app and all data (F
 
 ##@ Odoo
 
-odoo-image: check-tools ## build the odoo image of VERSION (19, 20, 20-nightly, master) and import it into the cluster
+odoo-image: check-tools ## build the odoo image of VERSION (19, 20, 20-nightly, master, ENTERPRISE=<dir>) and import it into the cluster
 	@mkdir -p $(BUILD_DIR)
+	@if [ -n "$(ENTERPRISE)" ] && [ ! -f "$(ENTERPRISE)/web_enterprise/__manifest__.py" ]; then \
+		echo "Error: ENTERPRISE=$(ENTERPRISE) is not a directory of Odoo Enterprise modules (no web_enterprise)"; exit 1; \
+	fi
 	@args=$$(scripts/build-args.sh $(VERSION)) && \
+	if [ -n "$(ENTERPRISE)" ]; then \
+		args="$$args --build-context enterprise=$(ENTERPRISE) --build-arg NOODLE_ENTERPRISE_MODULES=$(ENTERPRISE_MODULES)"; \
+	fi && \
 	docker build $$args -t $(IMAGE):dev .
 	@echo $(VERSION) > $(BUILD_DIR)/version
+	@echo $(if $(ENTERPRISE),$(abspath $(ENTERPRISE))) > $(BUILD_DIR)/enterprise
 	@# Tag by content, so the deployment only rolls out when the image changed
 	@tag=dev-$$(docker image inspect -f '{{.Id}}' $(IMAGE):dev | cut -d: -f2 | cut -c1-12); \
 	docker tag $(IMAGE):dev $(IMAGE):$$tag; \
