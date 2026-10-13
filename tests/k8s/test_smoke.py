@@ -27,12 +27,14 @@ def test_website_homepage():
     assert "o_noodle_hero" in response.text
 
 
-def test_website_phone_number():
-    """The header and footer show the Dynamist phone number instead of the placeholder."""
+def test_website_contact_details():
+    """The header and footer show the Dynamist phone number and email address instead of the placeholders."""
     text = requests.get(f"{ODOO_URL}/", timeout=30).text
     assert "+46 (0)8-DYNAMI" in text
     assert 'href="tel:+468396264"' in text
     assert "555-555-5556" not in text
+    assert 'href="mailto:hello@dynamist.se"' in text
+    assert "yourcompany" not in text
 
 
 def test_website_about_page():
