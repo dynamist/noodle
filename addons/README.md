@@ -30,6 +30,8 @@ The public website at <http://odoo.localhost/>, installed by default:
 - `views/homepage.xml` - the homepage content, inherits `website.homepage`
 - `views/pages.xml` - further pages, a QWeb template plus a `website.page`
   record with its URL
+- `views/contact.xml` - the phone number in the header and footer, which the
+  website templates hard-code
 - `data/menus.xml` - menu entries under `website.main_menu`, copied to every
   website
 - `static/src/scss/website.scss` - styles, in the `web.assets_frontend` bundle
