@@ -9,6 +9,10 @@
 ARG BASE=release-20
 ARG NIGHTLY_BASE=release-20
 
+# Odoo Enterprise modules, empty unless `make odoo-image ENTERPRISE=<dir>`
+# replaces this stage with a named build context (--build-context enterprise=)
+FROM scratch AS enterprise
+
 FROM odoo:19.0-20260926 AS release-19
 FROM odoo:20.0-20260926 AS release-20
 
@@ -53,6 +57,10 @@ COPY --chmod=0644 odoo/odoo.conf /etc/odoo/odoo.conf
 # Custom Dynamist modules, install them by adding them to ODOO_MODULES.
 # Not /mnt/extra-addons, which is a volume in the base image and would go stale.
 COPY addons/ /mnt/dynamist-addons/
+COPY --from=enterprise / /mnt/enterprise-addons/
+# Enterprise modules to install on top of ODOO_MODULES, e.g. ai_mcp for MCP
+ARG NOODLE_ENTERPRISE_MODULES=
+ENV NOODLE_ENTERPRISE_MODULES=${NOODLE_ENTERPRISE_MODULES}
 COPY --chmod=0755 odoo/entrypoint.sh odoo/init-odoo.sh /opt/noodle/
 COPY --chmod=0755 odoo/lib/ /opt/noodle/lib/
 COPY odoo/seed/ /opt/noodle/seed/

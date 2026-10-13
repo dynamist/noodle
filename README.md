@@ -61,6 +61,7 @@ Each app lives in its own namespace, see
 | URL / database | `http://odoo.localhost` / `odoo` |
 | Admin username / password | `admin` / `supersecr3tpassw0rdfordevelop1` |
 | Admin API key | `odoo-supersecr3tapikeyfordevelop1` |
+| Admin MCP key (Enterprise) | `odoo-supersecr3tmcpkeyfordevelop1` |
 | Master password | `supersecr3tmasterpassw0rdfordevelop1` |
 | Postgres user / password | `odoo` / `supersecr3tpassw0rdfordatabase1` |
 | Test users | password `supersecr3tpassw0rdfordevelop1`, API key `<first name>-supersecr3tapikeyfordevelop1` |
@@ -93,6 +94,19 @@ curl -s http://odoo.localhost/json/2/res.partner/search_read \
 | `make console` | odooly console (`ODOOLY_ENV=sales` for another `odooly.ini` section) |
 | `make validate` / `make test-k8s` | Validate the manifests / run `tests/k8s` against the deployed odoo |
 | `make tools` | Install the tools pinned in `mise.toml` |
+
+## MCP
+
+Odoo 20 Enterprise has an MCP server at `/mcp` (module `ai_mcp`). noodle builds
+Community by default, `make up ENTERPRISE=<dir of Enterprise modules>` adds
+it. Then connect Claude Code:
+
+```bash
+claude mcp add --transport http odoo http://odoo.localhost/mcp
+```
+
+See [MCP](docs/odoo-setup.md#mcp-odoo-20-enterprise) for the MCP key and
+what is not tested yet.
 
 ## Custom Modules
 

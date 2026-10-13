@@ -27,6 +27,10 @@ installed_count() {
   psql -tAc "SELECT count(*) FROM ir_module_module WHERE state = 'installed'" 2>/dev/null || true
 }
 
+mcp_installed() {
+  [ "$(psql -tAc "SELECT state FROM ir_module_module WHERE name = 'ai_mcp'" 2>/dev/null)" = "installed" ]
+}
+
 pad() {
   local LC_ALL=C.UTF-8 text=$1 width=$2
   printf "%s%*s" "$text" $((width - ${#text})) ""
@@ -68,6 +72,14 @@ print_banner() {
   echo "   curl -s ${ODOO_URL}/json/2/res.users/context_get \\"
   echo "     -H 'Authorization: bearer ${ODOO_API_KEY}' \\"
   echo "     -H 'X-Odoo-Database: ${PGDATABASE}' -H 'Content-Type: application/json' -d '{}'"
+  if mcp_installed; then
+    echo ""
+    echo "🔌 MCP server (Enterprise ai_mcp), connect Claude Code with OAuth:"
+    echo "   claude mcp add --transport http odoo ${ODOO_URL}/mcp"
+    echo "   or with the MCP key:"
+    echo "   claude mcp add --transport http odoo ${ODOO_URL}/mcp \\"
+    echo "     --header 'Authorization: Bearer ${ODOO_MCP_KEY}'"
+  fi
   echo "================================"
 }
 

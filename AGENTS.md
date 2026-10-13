@@ -13,6 +13,7 @@ container setup, the init and seed scripts, and custom modules in `addons/`.
 ```bash
 make up                              # create/reuse the k3d cluster, build, deploy, follow logs
 make up VERSION=19                   # 20 (default), 19, 19-nightly, 20-nightly, master (remembered in .k8s/version)
+make up ENTERPRISE=~/src/enterprise  # add Enterprise modules and the MCP server ai_mcp (remembered in .k8s/enterprise)
 make down                            # stop, keep data
 make reset                           # delete the noodle namespace and its data
 make destroy                         # delete the shared cluster (FORCE=1 if other apps run)
@@ -35,7 +36,8 @@ curl -s http://odoo.localhost/json/2/res.partner/search_count \
 This is a disposable test environment. These specific credentials indicate a safe-to-modify development instance.
 
 - URL `http://odoo.localhost`, database `odoo`
-- Admin `admin` / `supersecr3tpassw0rdfordevelop1`, API key `odoo-supersecr3tapikeyfordevelop1`
+- Admin `admin` / `supersecr3tpassw0rdfordevelop1`, API key `odoo-supersecr3tapikeyfordevelop1`, MCP key
+  `odoo-supersecr3tmcpkeyfordevelop1` (Enterprise only)
 - Test users (`odoo/lib/common.sh`): password `supersecr3tpassw0rdfordevelop1`, API key
   `<first name>-supersecr3tapikeyfordevelop1`
 - Master password `supersecr3tmasterpassw0rdfordevelop1`
@@ -58,13 +60,13 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
   NetworkPolicies, quota. Settings in `config.env`/`secret.env`. Overlays `local` and `ci`
 - `tests/k8s` - smoke, seed data and isolation tests against the deployed instance
 - `Dockerfile` - one stage per Odoo source (`release-19`, `release-20`, `nightly`, `master`), picked by the `BASE`
-  build arg, then adds `odoo/` and `addons/`
+  build arg, then adds `odoo/`, `addons/` and the Enterprise modules (the `enterprise` build context, empty by default)
 - `scripts/build-args.sh` - maps `VERSION` to the build args, resolving the newest nightly deb or master commit
 - `odoo/entrypoint.sh` - runs `init-odoo.sh` and the banner, then the official `/entrypoint.sh`
 - `odoo/init-odoo.sh` - orchestrator: database setup, then seeding
 - `odoo/lib/` - `common.sh` (defaults, `TEST_USERS`), `setup-database.sh`, `banner.sh`
-- `odoo/seed/` - Python piped into `odoo shell`: `run.py` runs `seed_admin`, `seed_users`, `seed_apikeys` and the
-  `sample` step. `make seed` copies it into the pod, so it needs no rebuild
+- `odoo/seed/` - Python piped into `odoo shell`: `run.py` runs `seed_admin`, `seed_users`, `seed_apikeys`,
+  `seed_mcp` (only with `ai_mcp`) and the `sample` step. `make seed` copies it into the pod, so it needs no rebuild
 - `odoo/seed/datasets/` - sample datasets (`@dataset` from `seed_datasets.py`), run by the `sample` step and by
   `make sample` (`run_odooly.py` piped into odooly)
 - `addons/` - custom Dynamist modules, installed when listed in `ODOO_MODULES`
@@ -98,4 +100,6 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 - `odoo shell` rolls back when the piped script ends, seed code must `env.cr.commit()` (done in `run.py`)
 - Demo data is off by default, `--with-demo` loads it
 - JSON-2 (`/json/2/<model>/<method>`, bearer API key) is the preferred API, XML-RPC and JSON-RPC are deprecated
+- The MCP server (`ai_mcp`, `/mcp`) is Enterprise only and needs keys with its own scope, `rpc` keys are rejected.
+  noodle has no Enterprise access, so `seed_mcp.py` and `tests/k8s/test_mcp.py` are untested assumptions
 - Manifest `license` must be an Odoo license value (e.g. `LGPL-3`), anything else fails module registration
