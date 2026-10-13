@@ -48,7 +48,8 @@ def test_website_about_menu():
     text = requests.get(f"{ODOO_URL}/", timeout=30).text
     # The attribute order differs between Odoo versions
     links = re.findall(r"<a\b([^>]*)>(.*?)</a>", text, re.S)
-    assert any('role="menuitem"' in attrs and 'href="/about"' in attrs and "About" in body for attrs, body in links)
+    menu = [(attrs, body) for attrs, body in links if 'role="menuitem"' in attrs]
+    assert any('href="/about"' in attrs and "About" in body for attrs, body in menu), menu
 
 
 def test_unknown_host_is_not_routed():
