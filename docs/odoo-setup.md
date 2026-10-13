@@ -108,6 +108,7 @@ make up
 | `ODOO_USER` | `admin` | Admin login |
 | `ODOO_PASSWORD` | `supersecr3tpassw0rdfordevelop1` | Admin password (secret) |
 | `ODOO_API_KEY` | `odoo-supersecr3tapikeyfordevelop1` | Admin API key (secret) |
+| `ODOO_MCP_KEY` | `odoo-supersecr3tmcpkeyfordevelop1` | Admin MCP key for `/mcp`, Enterprise only (secret) |
 | `ODOO_USERS_PASSWORD` | `supersecr3tpassw0rdfordevelop1` | Password of the test users (secret) |
 | `ODOO_ADMIN_PASSWD` | `supersecr3tmasterpassw0rdfordevelop1` | Master password, database manager (secret) |
 | `ODOO_MODULES` | `contacts,crm,sale_management,account,stock,project,hr` | Modules to install |
@@ -137,7 +138,9 @@ odoo -d odoo -u dynamist_foo --stop-after-init --no-http --db_host postgres
 ```
 
 Until `addons/` contains a module, Odoo logs a warning that
-`/mnt/dynamist-addons` is not a valid addons directory. It is harmless.
+`/mnt/dynamist-addons` is not a valid addons directory. It is harmless, and so
+is the same warning for `/mnt/enterprise-addons`, which is empty unless the
+image is built with [Enterprise](#mcp-odoo-20-enterprise).
 
 ### Adding Sample Data
 
@@ -255,6 +258,59 @@ ODOOLY_ENV=sales make console       # Astrid Lindqvist, sales user
 `mise.toml` also exports `ODOO_URL`, `ODOO_DB`, `ODOO_USER`, `ODOO_PASSWORD`
 and `ODOO_API_KEY` for tools under development.
 
+## MCP (Odoo 20 Enterprise)
+
+Odoo 20 has an MCP server at `/mcp`, the module `ai_mcp` of the AI app. It is
+**Odoo Enterprise only**: the Community images noodle builds by default do not
+have it. With the Enterprise modules on disk, build them into the image:
+
+```bash
+git clone --depth 1 --branch 20.0 git@github.com:odoo/enterprise.git ~/src/enterprise
+make reset   # a Community database cannot switch to Enterprise in place
+make up VERSION=20 ENTERPRISE=~/src/enterprise
+```
+
+`ENTERPRISE` is a directory of Enterprise modules for the same series as
+`VERSION`, e.g. a checkout of `odoo/enterprise` (partner access) or the
+Enterprise addons of the download with a subscription code. It is passed to
+`docker build` as the named build context `enterprise`, copied to
+`/mnt/enterprise-addons` and never into the repository. `ai_mcp` is installed
+on top of `ODOO_MODULES`. Like `VERSION`, the last `ENTERPRISE` is kept in
+`.k8s/enterprise`, `make up ENTERPRISE=` builds Community again. Without a
+subscription code an Enterprise database asks to be registered after 30 days,
+`make reset` starts over.
+
+The `mcp` seed step then adds the admin API key
+`odoo-supersecr3tmcpkeyfordevelop1` with the MCP scope and turns on
+dynamic client registration, so MCP clients can register themselves. On
+Community it does nothing. Connect Claude Code with OAuth, which opens the
+Odoo login and consent page in the browser:
+
+```bash
+claude mcp add --transport http odoo http://odoo.localhost/mcp
+```
+
+Or with the MCP key, without a browser:
+
+```bash
+claude mcp add --transport http odoo http://odoo.localhost/mcp \
+  --header "Authorization: Bearer odoo-supersecr3tmcpkeyfordevelop1"
+```
+
+Unlike Authelia in dynatron, Odoo has no pre-registered OAuth clients, so
+there is no `--client-id` or `--callback-port`. Claude Code acts as the user
+who logged in or owns the key, with that user's access rights. Odoo only
+exposes the tools marked "Available in MCP" under AI > Configuration > Tools,
+read-only ones by default. The `rpc` API keys do not work on `/mcp`, and the
+MCP key does not work on JSON-2.
+
+**Untested:** noodle has no Enterprise access yet, so this is built on Odoo's
+published description of `ai_mcp`. `odoo/seed/seed_mcp.py` detects the MCP
+key scope (a scope containing `mcp`) and the dynamic client registration
+setting (a settings field containing `dynamic_client_registration` or `dcr`)
+and logs a warning when it finds none. `tests/k8s/test_mcp.py` runs only when
+`ai_mcp` is installed. Fix both on the first Enterprise run.
+
 ## How It Works
 
 The `dynamist/odoo` image extends the official Odoo image of the selected
@@ -267,7 +323,8 @@ server:
    - drops and recreates it if an earlier first start was interrupted,
    - installs modules from `ODOO_MODULES` that are not installed yet.
 2. **Seeding:** pipes `odoo/seed/run.py` into `odoo shell`, which runs the
-   seed steps `admin`, `users`, `apikeys` and `sample` (the datasets in
+   seed steps `admin`, `users`, `apikeys`, `mcp` (only with `ai_mcp`, see
+   [MCP](#mcp-odoo-20-enterprise)) and `sample` (the datasets in
    `odoo/seed/datasets/`).
 3. **Banner:** prints the credentials once `/web/health` answers.
 
@@ -362,6 +419,8 @@ make test-k8s                   # run tests/k8s against the deployed odoo
 `tests/k8s` runs against the deployed instance and needs no Python project,
 `make test-k8s` runs it with `uv run --with`:
 
+- **MCP:** OAuth metadata, MCP tools with the MCP key, the `rpc` key is
+  rejected. Skipped unless `ai_mcp` (Enterprise) is installed.
 - **Smoke:** health, login page, admin API key, WebSocket upgrade through
   Traefik, unknown hosts get a 404.
 - **Seed data:** test users with their groups, API keys (none for the portal
