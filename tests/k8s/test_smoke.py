@@ -46,7 +46,9 @@ def test_website_about_page():
 def test_website_about_menu():
     """The main menu links to the About page, not only the homepage button."""
     text = requests.get(f"{ODOO_URL}/", timeout=30).text
-    assert re.search(r'<a role="menuitem" href="/about"[^>]*>\s*<span>About</span>', text)
+    # The attribute order differs between Odoo versions
+    links = re.findall(r"<a\b([^>]*)>(.*?)</a>", text, re.S)
+    assert any('role="menuitem"' in attrs and 'href="/about"' in attrs and "About" in body for attrs, body in links)
 
 
 def test_unknown_host_is_not_routed():
