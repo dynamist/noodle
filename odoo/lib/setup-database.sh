@@ -151,7 +151,12 @@ setup_database() {
   wait_for_db
   case "$(db_state)" in
     absent | partial) create_database ;;
-    ready) check_series && upgrade_changed_addons && install_missing_modules ;;
+    ready)
+      # Separate commands, so set -e stops before the hash is recorded
+      check_series
+      upgrade_changed_addons
+      install_missing_modules
+      ;;
   esac
   record_addons_hash
 }

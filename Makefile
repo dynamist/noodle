@@ -122,8 +122,12 @@ seed: check-tools ## copy odoo/seed into odoo and re-run seeding (STEPS=users,ap
 		/opt/noodle/init-odoo.sh --seed-only
 
 upgrade: check-tools ## copy addons/ into odoo and upgrade the changed modules, install missing ones (no restart)
-	tar -C addons --exclude=__pycache__ -c . | \
-		$(KUBECTL) exec -i deploy/odoo -- sh -c 'find /mnt/dynamist-addons -mindepth 1 -delete && tar -x -C /mnt/dynamist-addons'
+	@mkdir -p $(BUILD_DIR)
+	tar -C addons --exclude=__pycache__ -cf $(BUILD_DIR)/addons.tar .
+	@# Unpack next to the live modules first, so a failed copy leaves them in place
+	$(KUBECTL) exec -i deploy/odoo -- sh -ec 'rm -rf /tmp/noodle-addons && mkdir /tmp/noodle-addons && \
+		tar -x -C /tmp/noodle-addons && find /mnt/dynamist-addons -mindepth 1 -delete && \
+		cp -a /tmp/noodle-addons/. /mnt/dynamist-addons/' < $(BUILD_DIR)/addons.tar
 	$(KUBECTL) exec deploy/odoo -- /opt/noodle/lib/setup-database.sh
 
 sample: ## load sample datasets through the API with odooly (DATASETS=crm to limit, ODOOLY_ENV)
