@@ -15,9 +15,13 @@ OVERLAY ?= local
 IMAGE := dynamist/odoo
 BUILD_DIR := .k8s
 
-# Odoo to build: 19, 20, 20-nightly or master, see scripts/build-args.sh.
+# Odoo to build: 19, 20, 19-nightly, 20-nightly or master, see scripts/build-args.sh.
 # Defaults to the last one built, switching needs `make reset`.
 VERSION ?= $(shell cat $(BUILD_DIR)/version 2>/dev/null || echo 20)
+# PostgreSQL major version to run, or min for the oldest Odoo supports, see
+# scripts/postgres-version.sh. Defaults to the last one deployed, else the tag
+# in k8s/base/postgres.yaml. Switching needs `make reset`.
+PG ?= $(shell cat $(BUILD_DIR)/postgres 2>/dev/null)
 
 # odooly.ini section used by `make console` and `make sample`
 ODOOLY_ENV ?= dev
@@ -79,18 +83,30 @@ odoo-image: check-tools ## build the odoo image of VERSION (19, 20, 20-nightly, 
 	$(K3D) image import -c $(CLUSTER) $(IMAGE):$$tag; \
 	echo $$tag > $(BUILD_DIR)/image-tag
 
-deploy: check-tools ## apply the manifests of OVERLAY (local or ci) with the imported image
+deploy: check-tools ## apply the manifests of OVERLAY (local or ci) with the imported image and PostgreSQL PG
 	@test -f $(BUILD_DIR)/image-tag || { echo "Error: no image imported yet, run make odoo-image"; exit 1; }
 	@touch k8s/overlays/local/config.local.env
-	@printf '%s\n' \
+	@tag=$$(cat $(BUILD_DIR)/image-tag) && \
+	pg=$$(scripts/postgres-version.sh $(IMAGE):$$tag $(PG)) && \
+	data=$$($(KUBECTL) exec statefulset/postgres -c postgres -- sh -c 'cat "$$PGDATA/PG_VERSION"' 2>/dev/null); \
+	if [ -n "$$data" ] && [ "$$data" != "$$pg" ]; then \
+		echo "Error: the database was created with PostgreSQL $$data, PG asks for $$pg"; \
+		echo "Error: run 'make reset' to delete the data, then 'make up PG=$$pg' again (or PG=$$data to keep it)"; \
+		exit 1; \
+	fi; \
+	printf '%s\n' \
 		'apiVersion: kustomize.config.k8s.io/v1beta1' \
 		'kind: Kustomization' \
 		'resources: [../k8s/overlays/$(OVERLAY)]' \
-		'images: [{name: $(IMAGE), newTag: '"$$(cat $(BUILD_DIR)/image-tag)"'}]' \
-		> $(BUILD_DIR)/kustomization.yaml
-	mise exec -- kubectl --context $(KUBE_CONTEXT) apply -k $(BUILD_DIR)
+		'images:' \
+		"  - {name: $(IMAGE), newTag: $$tag}" \
+		"  - {name: postgres, newTag: \"$$pg\"}" \
+		> $(BUILD_DIR)/kustomization.yaml && \
+	echo "Deploying PostgreSQL $$pg" && \
+	mise exec -- kubectl --context $(KUBE_CONTEXT) apply -k $(BUILD_DIR) && \
+	echo $$pg > $(BUILD_DIR)/postgres
 
-up: cluster odoo-image deploy ## start odoo of VERSION in the cluster and follow its logs until it is ready
+up: cluster odoo-image deploy ## start odoo of VERSION on PostgreSQL PG in the cluster and follow its logs until it is ready
 	@$(KUBECTL) rollout status statefulset/postgres --timeout=5m
 	@$(KUBECTL) logs -f deploy/odoo --pod-running-timeout=5m & logs=$$!; \
 	$(KUBECTL) rollout status deploy/odoo --timeout=30m; status=$$?; \
@@ -105,9 +121,10 @@ reset: check-tools ## DELETE the noodle namespace with all its data (other apps 
 logs: check-tools ## follow odoo logs
 	$(KUBECTL) logs -f deploy/odoo
 
-ps: check-tools ## show pods, services, ingress, volumes and the running Odoo version
+ps: check-tools ## show pods, services, ingress, volumes and the running Odoo and PostgreSQL versions
 	$(KUBECTL) get pods,svc,ingress,pvc
 	@$(KUBECTL) exec deploy/odoo -- odoo --version 2>/dev/null || true
+	@$(KUBECTL) exec statefulset/postgres -c postgres -- postgres --version 2>/dev/null || true
 
 shell: check-tools ## open shell in the odoo pod
 	$(KUBECTL) exec -it deploy/odoo -- /bin/bash
@@ -142,7 +159,7 @@ validate: ## validate the rendered manifests of all overlays
 	done
 
 test-k8s: ## run the smoke, seed data and isolation tests in tests/k8s against the deployed odoo (PYTEST_ARGS="-m 'not slow'" for pytest)
-	NOODLE_VERSION=$(VERSION) mise exec -- uv run --no-project --with pytest --with requests --with pyyaml \
+	NOODLE_VERSION=$(VERSION) NOODLE_POSTGRES=$$(cat $(BUILD_DIR)/postgres 2>/dev/null) mise exec -- uv run --no-project --with pytest --with requests --with pyyaml \
 		pytest tests/k8s -p no:cacheprovider $(PYTEST_ARGS)
 
 ##@ CI

@@ -44,6 +44,18 @@ The last `VERSION` built is kept in `.k8s/version`, a plain `make up` reuses
 it. A database only works with the Odoo series that created it: Odoo refuses to
 start on another one and asks for `make reset`.
 
+`PG` picks the PostgreSQL major version next to it, PostgreSQL 17 by default.
+`PG=min` picks the oldest version the Odoo series supports, and a version below
+that is refused before deploying:
+
+```bash
+make reset && make up VERSION=19 PG=min
+make reset && make up PG=18
+```
+
+The last `PG` is kept in `.k8s/postgres`. The data only works with the
+PostgreSQL major version that created it, switching needs `make reset` as well.
+
 ```bash
 make console    # odooly console logged in as admin with the API key
 make test-k8s   # run the smoke, seed data and isolation tests
