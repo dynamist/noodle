@@ -25,15 +25,45 @@ spec:
         app.kubernetes.io/name: postgres
     spec:
       enableServiceLinks: false
+      initContainers:
+        # A major version cannot read the data of another, say so instead of
+        # failing on start. `make deploy` replaces both images with PG
+        - name: check-version
+          image: postgres:17
+          command:
+            - sh
+            - -c
+            - |
+              data=$(cat "$PGDATA/PG_VERSION" 2>/dev/null) || exit 0
+              if [ "$data" != "$PG_MAJOR" ]; then
+                echo "ERROR: the database was created with PostgreSQL $data, this image runs PostgreSQL $PG_MAJOR"
+                echo "ERROR: run 'make reset' to delete the data, then 'make up PG=$PG_MAJOR' again (or PG=$data to keep it)"
+                exit 1
+              fi
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/pgdata
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql
       containers:
         - name: postgres
+          # The default PostgreSQL, `make deploy` replaces the tag with PG
           image: postgres:17
           env:
             # Do not pre-create the Odoo database, init-odoo.sh creates it
             - name: POSTGRES_DB
               value: postgres
+            # The volume of the postgres:18 and later images, a subdirectory
+            # so initdb gets an empty directory
             - name: PGDATA
-              value: /var/lib/postgresql/data/pgdata
+              value: /var/lib/postgresql/pgdata
           envFrom:
             - secretRef:
                 name: odoo-secret
@@ -52,7 +82,7 @@ spec:
               memory: 1Gi
           volumeMounts:
             - name: data
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/postgresql
   volumeClaimTemplates:
     - metadata:
         name: data

@@ -13,6 +13,7 @@ container setup, the init and seed scripts, and custom modules in `addons/`.
 ```bash
 make up                              # create/reuse the k3d cluster, build, deploy, follow logs
 make up VERSION=19                   # 20 (default), 19, 19-nightly, 20-nightly, master (remembered in .k8s/version)
+make up PG=18                        # PostgreSQL major version, 17 (default) or min (remembered in .k8s/postgres)
 make down                            # stop, keep data
 make reset                           # delete the noodle namespace and its data
 make destroy                         # delete the shared cluster (FORCE=1 if other apps run)
@@ -55,12 +56,14 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 
 - `k8s/cluster/k3d.yaml` - shared k3d cluster `dynamist` (Traefik on 127.0.0.1:80/443), identical in every repo
   that uses it
-- `k8s/base` - namespace `noodle`: `postgres` StatefulSet (postgres:17), `odoo` Deployment, Ingress `odoo.localhost`,
-  NetworkPolicies, quota. Settings in `config.env`/`secret.env`. Overlays `local` and `ci`
+- `k8s/base` - namespace `noodle`: `postgres` StatefulSet (postgres:17, `PG` overrides the tag), `odoo` Deployment,
+  Ingress `odoo.localhost`, NetworkPolicies, quota. Settings in `config.env`/`secret.env`. Overlays `local` and `ci`
 - `tests/k8s` - smoke, seed data and isolation tests against the deployed instance
 - `Dockerfile` - one stage per Odoo source (`release-19`, `release-20`, `nightly`, `master`), picked by the `BASE`
   build arg, then adds `odoo/` and `addons/`
 - `scripts/build-args.sh` - maps `VERSION` to the build args, resolving the newest nightly deb or master commit
+- `scripts/postgres-version.sh` - resolves `PG` to a PostgreSQL major version, at least the image's
+  `MIN_PG_VERSION`
 - `odoo/entrypoint.sh` - runs `init-odoo.sh` and the banner, then the official `/entrypoint.sh`
 - `odoo/init-odoo.sh` - orchestrator: database setup, then seeding
 - `odoo/lib/` - `common.sh` (defaults, `TEST_USERS`), `setup-database.sh`, `banner.sh`
@@ -78,7 +81,8 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 
 - Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`), default branch `main`
 - Work on a branch and open a pull request, do not push to `main`. CI tests only Odoo 20 on a pull request, add the
-  labels `ci:odoo-19`, `ci:odoo-20` and `ci:odoo-master` to test exactly those versions instead
+  labels `ci:odoo-19`, `ci:odoo-20` and `ci:odoo-master` to test exactly those versions instead, and
+  `ci:postgres-<major>` to run them on those PostgreSQL versions
 - Init and seed steps must be idempotent (check, then create or update) since they run on every start. Shell modules
   in `odoo/lib/` must also run on their own.
 - Sample data goes in a dataset file in `odoo/seed/datasets/`, declaring its Odoo `modules` and the datasets it
@@ -95,6 +99,8 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 - Seed code runs on 19, 20 and master: detect features (`hasattr`) instead of checking versions, and share the
   helpers in `seed_common.py`
 - A database only works with the series that created it, `setup-database.sh` refuses others, `make reset` to switch
+- The PostgreSQL data only works with the major version that created it, `make deploy` and the `check-version` init
+  container refuse others, `make reset` to switch. Odoo only warns below `MIN_PG_VERSION`, `postgres-version.sh` refuses
 - Odoo 20: `ir.config_parameter.set_param()` is gone, use typed `set_str()`/`set_bool()`/`set_int()` (see
   `seed_common.set_param()`)
 - Odoo 20: bearer API keys must have the route's scope (`rpc`), keys without a scope no longer work there

@@ -84,6 +84,18 @@
       "allowedVersions": "/^20\\./"
     },
     {
+      "description": "The postgres tag in k8s/base/postgres.yaml is the default PostgreSQL for new data only",
+      "matchManagers": [
+        "kubernetes"
+      ],
+      "matchDepNames": [
+        "postgres"
+      ],
+      "prBodyNotes": [
+        ":warning: Existing setups keep the PostgreSQL in `.k8s/postgres`. A new major version only applies after `make reset` (the data belongs to the major version that created it). Check that it is not newer than the PostgreSQL client in the Odoo images."
+      ]
+    },
+    {
       "description": "dynamist/odoo is built from this repo and tagged at deploy time, there is nothing upstream to track",
       "matchDepNames": [
         "dynamist/odoo"

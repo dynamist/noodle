@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 import pytest
 import requests
-from conftest import ADMIN_KEY, ODOO_URL, json2, json2_ok
+from conftest import ADMIN_KEY, ODOO_URL, json2, json2_ok, kubectl
 
 
 def test_health():
@@ -92,3 +92,12 @@ def test_odoo_series():
         pytest.skip("no NOODLE_VERSION with a series, e.g. master")
     response = requests.post(f"{ODOO_URL}/web/webclient/version_info", json={}, timeout=30)
     assert response.json()["result"]["server_serie"] == f"{match[1]}.0"
+
+
+def test_postgres_version():
+    """Odoo runs on the PostgreSQL major version that was deployed (make passes NOODLE_POSTGRES)."""
+    expected = os.environ.get("NOODLE_POSTGRES")
+    if not expected:
+        pytest.skip("no NOODLE_POSTGRES, deploy with make up")
+    version = kubectl("exec", "deploy/odoo", "--", "psql", "-tAc", "SHOW server_version_num").stdout.strip()
+    assert int(version) // 10000 == int(expected)

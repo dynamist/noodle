@@ -311,10 +311,41 @@ Differences between the versions are handled in the seed code by feature
 detection rather than version checks, e.g. `set_param()` in
 `seed_common.py`.
 
-CI tests `20` on every change. A pull request with the label `ci:odoo-19`,
-`ci:odoo-20` or `ci:odoo-master` tests exactly the labelled versions instead.
-The weekly and manual runs test `19`, `20`, `19-nightly`, `20-nightly` and
-`master` (`master` may fail without failing the workflow).
+## PostgreSQL Versions
+
+`make up PG=...` runs the official `postgres:<PG>` image next to Odoo, the
+deploy replaces the tag of `k8s/base/postgres.yaml` in the generated
+`.k8s/kustomization.yaml`. `scripts/postgres-version.sh` resolves `PG`:
+
+| `PG` | PostgreSQL |
+|------|------------|
+| empty (default) | the tag in `k8s/base/postgres.yaml`, `17` |
+| `min` | the oldest the Odoo in the image supports, `odoo.release.MIN_PG_VERSION` |
+| `16`, `18`, ... | that major version |
+
+Odoo itself only warns when PostgreSQL is older than `MIN_PG_VERSION`, so
+`make deploy` reads it from the built image and refuses an older `PG`.
+
+The last `PG` is kept in `.k8s/postgres` and reused by a plain `make up`, so a
+new default in `k8s/base/postgres.yaml` does not break existing data. The data
+belongs to the major version that created it (`PG_VERSION` in the data
+directory). `make deploy` compares it with `PG` while postgres runs, and the
+`check-version` init container of the StatefulSet when it starts. Either stops
+with an error, run `make reset` to switch.
+
+The volume is mounted at `/var/lib/postgresql` with the data in `pgdata/`,
+which is the volume of `postgres:18` and later images and works for the older
+ones as well.
+
+## Versions in CI
+
+CI tests `20` on the default PostgreSQL on every change. A pull request with
+the label `ci:odoo-19`, `ci:odoo-20` or `ci:odoo-master` tests exactly the
+labelled versions instead, and the labels `ci:postgres-<major>` (e.g.
+`ci:postgres-18`) run each of them on those PostgreSQL versions. The weekly
+and manual runs test `19`, `20`, `19-nightly`, `20-nightly` and `master`, each
+on the default, `min` and `18` (`master` may fail without failing the
+workflow).
 
 ## Kubernetes Setup
 
