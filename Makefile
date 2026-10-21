@@ -1,4 +1,4 @@
-.PHONY: help check-tools tools cluster destroy odoo-image deploy up down reset logs ps shell creds seed upgrade sample validate test-k8s ci-deploy ci-test odoo-shell psql db-forward console
+.PHONY: help check-tools tools cluster destroy odoo-image deploy up down reset logs ps shell creds seed upgrade sample validate test-k8s test-scripts ci-deploy ci-test odoo-shell psql db-forward console
 
 .DEFAULT_GOAL := help
 
@@ -162,6 +162,9 @@ test-k8s: ## run the smoke, seed data and isolation tests in tests/k8s against t
 	NOODLE_VERSION=$(VERSION) NOODLE_POSTGRES=$$(cat $(BUILD_DIR)/postgres 2>/dev/null) mise exec -- uv run --no-project --with pytest --with requests --with pyyaml \
 		pytest tests/k8s -p no:cacheprovider $(PYTEST_ARGS)
 
+test-scripts: ## run the tests of scripts/ in tests/scripts, no cluster needed
+	mise exec -- uv run --no-project --with pytest pytest tests/scripts -p no:cacheprovider $(PYTEST_ARGS)
+
 ##@ CI
 
 # Every app repo using the shared cluster provides ci-deploy and ci-test, so CI
@@ -173,6 +176,7 @@ ci-deploy: cluster odoo-image ## build and deploy the ci overlay, wait until it 
 	$(KUBECTL) rollout status deploy/odoo --timeout=40m
 
 ci-test: ## run every test against the deployed ci overlay
+	$(MAKE) --no-print-directory test-scripts PYTEST_ARGS="-v"
 	$(MAKE) --no-print-directory test-k8s PYTEST_ARGS="-v"
 	$(MAKE) --no-print-directory sample
 

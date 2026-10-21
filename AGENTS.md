@@ -25,6 +25,7 @@ make shell / make odoo-shell / make psql / make db-forward
 make console                         # odooly as admin (ODOOLY_ENV=<odooly.ini section>)
 make validate                        # kubeconform on the rendered overlays
 make test-k8s                        # tests/k8s against the deployed odoo
+make test-scripts                    # tests/scripts, no cluster needed
 
 # Test against the local Odoo (safe to run data-altering operations)
 curl -s http://odoo.localhost/json/2/res.partner/search_count \
@@ -59,6 +60,7 @@ This runs shellcheck, ruff (check and format) for `odoo/seed`, yamllint and tapl
 - `k8s/base` - namespace `noodle`: `postgres` StatefulSet (postgres:17, `PG` overrides the tag), `odoo` Deployment,
   Ingress `odoo.localhost`, NetworkPolicies, quota. Settings in `config.env`/`secret.env`. Overlays `local` and `ci`
 - `tests/k8s` - smoke, seed data and isolation tests against the deployed instance
+- `tests/scripts` - tests of `scripts/` with a stub `docker`, no cluster needed
 - `Dockerfile` - one stage per Odoo source (`release-19`, `release-20`, `nightly`, `master`), picked by the `BASE`
   build arg, then adds `odoo/` and `addons/`
 - `scripts/build-args.sh` - maps `VERSION` to the build args, resolving the newest nightly deb or master commit
