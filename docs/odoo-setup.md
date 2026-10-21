@@ -391,6 +391,7 @@ make db-forward                 # PostgreSQL on 127.0.0.1:5432 until Ctrl+C (POS
 make console                    # odooly console
 make validate                   # validate the rendered manifests with kubeconform
 make test-k8s                   # run tests/k8s against the deployed odoo
+make test-scripts               # run tests/scripts, no cluster needed
 ```
 
 ## Testing
@@ -411,9 +412,12 @@ make test-k8s                   # run tests/k8s against the deployed odoo
 make test-k8s PYTEST_ARGS="-m 'not slow'"
 ```
 
+`tests/scripts` tests `scripts/postgres-version.sh` with a stub `docker`
+instead of the Odoo image, `make test-scripts` runs it without a cluster.
+
 CI (`.github/workflows/k8s.yml`) validates the manifests, then creates a k3d
 cluster on the runner and runs `make ci-deploy` (the `ci` overlay) and
-`make ci-test` (`make test-k8s` and `make sample`). A coexistence job deploys the
+`make ci-test` (`make test-scripts`, `make test-k8s` and `make sample`). A coexistence job deploys the
 apps listed in the repository variable `COEXISTENCE_REPOS` (space separated
 `owner/name`) into the same cluster and runs every app's tests, which also
 checks that the apps cannot reach each other and that all repos pin the same

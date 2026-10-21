@@ -21,8 +21,10 @@ read -r series minimum < <(docker run --rm --entrypoint python3 "$image" \
 
 case "$pg" in
   "")
-    pg=$(sed -nE 's/^ *image: postgres:([0-9]+)$/\1/p' "${root}/k8s/base/postgres.yaml")
+    # The init container and the server both name the image, they must agree
+    pg=$(sed -nE 's/^ *image: postgres:([0-9]+)$/\1/p' "${root}/k8s/base/postgres.yaml" | sort -u)
     [[ -n "$pg" ]] || { log "Error: no postgres:<major> image in k8s/base/postgres.yaml"; exit 1; }
+    [[ "$pg" != *$'\n'* ]] || { log "Error: different postgres images in k8s/base/postgres.yaml: ${pg//$'\n'/, }"; exit 1; }
     ;;
   min)
     pg=$minimum
