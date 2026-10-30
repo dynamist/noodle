@@ -1,5 +1,6 @@
 """noodle keeps to its namespace in the shared cluster."""
 
+import json
 import subprocess
 import uuid
 
@@ -8,15 +9,27 @@ import yaml
 from conftest import KUBE_CONTEXT, NAMESPACE, ROOT, kubectl, kubectl_json
 
 
-def probe_from(namespace, host, port):
+def probe_from(namespace, host, port, labels=None):
     """Try a TCP connection from a throwaway pod, return True when it connects.
 
     The pod runs to completion before its log is read: `kubectl run -i` loses
-    the output when the container exits before kubectl attaches.
+    the output when the container exits before kubectl attaches. It never
+    turns ready, so a probe that carries an app's labels is not added to that
+    app's Service and gets none of its traffic.
     """
     name = f"probe-{uuid.uuid4().hex[:8]}"
     command = f"nc -z -w 5 {host} {port} && echo OPEN || echo CLOSED"
-    kubectl("run", name, "--restart=Never", "--image=busybox:1.37", "--", "sh", "-c", command, namespace=namespace)
+    container = {
+        "name": name,
+        "image": "busybox:1.37",
+        "command": ["sh", "-c", command],
+        "readinessProbe": {"exec": {"command": ["false"]}},
+    }
+    args = ["run", name, "--restart=Never", "--image=busybox:1.37"]
+    args += [f"--overrides={json.dumps({'spec': {'containers': [container]}})}"]
+    if labels:
+        args += [f"--labels={','.join(f'{key}={value}' for key, value in labels.items())}"]
+    kubectl(*args, namespace=namespace)
     try:
         kubectl(
             "wait",
@@ -33,24 +46,22 @@ def probe_from(namespace, host, port):
     return output.strip() == "OPEN"
 
 
-def odoo_client_selectors():
-    """Label selectors of the namespaces that odoo-from-dev-apps lets reach Odoo."""
+def odoo_client_peer():
+    """The namespace selector and the client pod names of odoo-from-dev-apps."""
     policies = yaml.safe_load_all((ROOT / "k8s/base/networkpolicy.yaml").read_text())
     [policy] = [p for p in policies if p["metadata"]["name"] == "odoo-from-dev-apps"]
-    return [
-        ",".join(f"{key}={value}" for key, value in peer["namespaceSelector"]["matchLabels"].items())
-        for rule in policy["spec"]["ingress"]
-        for peer in rule["from"]
-    ]
+    [rule] = policy["spec"]["ingress"]
+    [peer] = rule["from"]
+    selector = ",".join(f"{key}={value}" for key, value in peer["namespaceSelector"]["matchLabels"].items())
+    [expression] = peer["podSelector"]["matchExpressions"]
+    assert expression["key"] == "app.kubernetes.io/name" and expression["operator"] == "In", expression
+    return selector, expression["values"]
 
 
-def odoo_clients():
-    """Deployed namespaces that odoo-from-dev-apps lets reach Odoo."""
-    return {
-        ns["metadata"]["name"]
-        for selector in odoo_client_selectors()
-        for ns in kubectl_json("get", "namespaces", "-l", selector)["items"]
-    }
+def odoo_client_namespaces():
+    """Deployed namespaces whose client pods odoo-from-dev-apps lets reach Odoo."""
+    selector, _names = odoo_client_peer()
+    return [ns["metadata"]["name"] for ns in kubectl_json("get", "namespaces", "-l", selector)["items"]]
 
 
 def other_namespaces():
@@ -61,23 +72,29 @@ def other_namespaces():
 
 
 @pytest.mark.parametrize(
-    "host,port,allowed",
-    [("odoo.noodle.svc.cluster.local", 8069, odoo_clients), ("postgres.noodle.svc.cluster.local", 5432, set)],
+    "host,port", [("odoo.noodle.svc.cluster.local", 8069), ("postgres.noodle.svc.cluster.local", 5432)]
 )
-def test_other_namespaces_cannot_reach_noodle(host, port, allowed):
-    allowed = allowed()
+def test_other_namespaces_cannot_reach_noodle(host, port):
+    """An unlabelled pod is refused everywhere, also in the namespaces of Odoo's clients."""
     for namespace in other_namespaces():
-        if namespace not in allowed:
-            assert not probe_from(namespace, host, port), f"{host}:{port} is reachable from {namespace}"
+        assert not probe_from(namespace, host, port), f"{host}:{port} is reachable from {namespace}"
 
 
-def test_dev_app_clients_reach_odoo():
-    """The namespaces in odoo-from-dev-apps can use the Odoo API, when they are deployed."""
-    clients = odoo_clients() & set(other_namespaces())
-    if not clients:
-        pytest.skip(f"no namespace matching {odoo_client_selectors()} is deployed in the cluster")
-    for namespace in clients:
-        assert probe_from(namespace, "odoo.noodle.svc.cluster.local", 8069), f"Odoo is not reachable from {namespace}"
+def odoo_client_cases():
+    _selector, names = odoo_client_peer()
+    # postgres is a pod name the clients' namespaces have that must not call Odoo
+    return [(name, True) for name in names] + [("postgres", False)]
+
+
+@pytest.mark.parametrize("name,allowed", odoo_client_cases())
+def test_dev_app_clients_reach_odoo(name, allowed):
+    """Only the client pods in odoo-from-dev-apps can use the Odoo API, when they are deployed."""
+    namespaces = odoo_client_namespaces()
+    if not namespaces:
+        pytest.skip(f"no namespace matching {odoo_client_peer()[0]} is deployed in the cluster")
+    for namespace in namespaces:
+        reached = probe_from(namespace, "odoo.noodle.svc.cluster.local", 8069, {"app.kubernetes.io/name": name})
+        assert reached == allowed, f"a {name} pod in {namespace} {'cannot' if allowed else 'can'} reach Odoo"
 
 
 def test_probe_detects_open_ports():

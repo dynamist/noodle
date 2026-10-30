@@ -2,6 +2,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: noodle
+  # app.kubernetes.io/part-of: noodle comes from the kustomization
   labels:
-    # Marks namespaces of dev apps in the shared cluster, see `make destroy`
+    # Marks namespaces of dev apps in the shared cluster, see `make destroy`.
+    # Every repo still discovers the others by it, until they all use part-of
     dynamist.se/dev-app: noodle
