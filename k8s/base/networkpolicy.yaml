@@ -35,8 +35,17 @@ spec:
 # named here, where a destination's ingress belongs, rather than worked
 # around at the caller.
 #
+# Selected by the `dynamist.se/dev-app` label rather than the namespace name,
+# because Dynatron runs one instance per git worktree: `dynatron` for the
+# main checkout and `dynatron-<slug>` for each worktree, all labelled
+# `dynamist.se/dev-app: dynatron`. A name would admit only the main instance,
+# and a name prefix cannot be selected. The cost: the API server sets
+# `kubernetes.io/metadata.name`, while anyone who can create a namespace can
+# set this label, but in this local cluster those are the same people who
+# could edit this policy, so it widens nothing real.
+#
 # Namespace-scoped rather than pod-scoped on purpose: it grants the dev
-# namespace, not a particular Deployment, so a second consumer there needs
+# namespaces, not a particular Deployment, so a second consumer there needs
 # no change. Port 8069 only, which serves JSON-2, XML-RPC and JSON-RPC.
 # Clients use http://odoo.noodle.svc.cluster.local:8069 with the
 # X-Odoo-Database header, Odoo does not check the Host header.
@@ -53,7 +62,7 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: dynatron
+              dynamist.se/dev-app: dynatron
       ports:
         - port: 8069
 ---
