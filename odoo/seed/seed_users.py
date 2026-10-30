@@ -31,7 +31,7 @@ def run(env):
         if user:
             user.with_context(no_reset_password=True).write(vals)
         else:
-            if has_hr and role != "portal":
+            if has_hr and role not in ("portal", "integration"):
                 vals["create_employee"] = True
             user = Users.create(vals)
             log(f"Created user {login} ({role})")

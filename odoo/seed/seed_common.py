@@ -5,6 +5,7 @@ import os
 # Groups given to each test user role, on top of base.group_user for internal roles
 ROLES = {
     "internal": [],
+    "integration": [],
     "sales_user": ["sales_team.group_sale_salesman"],
     "sales_manager": ["sales_team.group_sale_manager"],
     "inventory_user": ["stock.group_stock_user"],
