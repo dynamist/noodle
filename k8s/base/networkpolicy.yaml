@@ -35,9 +35,26 @@ spec:
 # named here, where a destination's ingress belongs, rather than worked
 # around at the caller.
 #
-# Namespace-scoped rather than pod-scoped on purpose: it grants the dev
-# namespace, not a particular Deployment, so a second consumer there needs
-# no change. Port 8069 only, which serves JSON-2, XML-RPC and JSON-RPC.
+# Selected by the recommended Kubernetes labels rather than the namespace
+# name, because Dynatron runs one instance per git worktree: `dynatron` for
+# the main checkout and `dynatron-<slug>` for each worktree, all labelled
+# `app.kubernetes.io/part-of: dynatron`. A name would admit only the main
+# instance, and a name prefix cannot be selected. Both selectors sit in one
+# `from` entry, so a pod must match both: only Dynatron's web and worker pods
+# call Odoo, its databases and other services in the same namespace do not.
+#
+# The caveats, for production as much as here, since a label is only as
+# trustworthy as whoever may set it:
+# - The API server sets `kubernetes.io/metadata.name`, but anyone who can
+#   create or label a namespace can claim `part-of: dynatron` for it.
+# - Anyone who can create pods in an admitted namespace can claim an admitted
+#   pod name, `dynatron` or `worker`, for any pod they start there.
+# In this local cluster those are the same people who could edit this
+# policy, so it widens nothing real. In production, restrict who may label
+# namespaces and create pods in them (RBAC, or an admission policy that
+# reserves the labels) before trusting a selector like this one.
+#
+# Port 8069 only, which serves JSON-2, XML-RPC and JSON-RPC.
 # Clients use http://odoo.noodle.svc.cluster.local:8069 with the
 # X-Odoo-Database header, Odoo does not check the Host header.
 apiVersion: networking.k8s.io/v1
@@ -53,7 +70,12 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: dynatron
+              app.kubernetes.io/part-of: dynatron
+          podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [dynatron, worker]
       ports:
         - port: 8069
 ---
