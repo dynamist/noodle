@@ -37,6 +37,8 @@ TEST_USERS=(
   "per.lundgren:Per Lundgren:project_manager"
   "lena.hedlund:Lena Hedlund:hr_officer"
   "olof.nystrom:Olof Nyström:portal"
+  # Dynatron's service account, the key for its Odoo credentials check
+  "dynatron:Dynatron:integration"
 )
 NOODLE_TEST_USERS="$(printf '%s\n' "${TEST_USERS[@]}")"
 export NOODLE_TEST_USERS

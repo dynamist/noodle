@@ -63,8 +63,10 @@ user which has no API key.
 | `per.lundgren` | Per Lundgren | Project: administrator | `per-supersecr3tapikeyfordevelop1` |
 | `lena.hedlund` | Lena Hedlund | Employees: officer | `lena-supersecr3tapikeyfordevelop1` |
 | `olof.nystrom` | Olof Nyström | Portal | none |
+| `dynatron` | Dynatron | Integration: internal user, no app rights | `dynatron-supersecr3tapikeyfordevelop1` |
 
-Internal test users also get an employee record.
+Internal test users also get an employee record, except the integration user
+`dynatron`, the service account that Dynatron's credentials check uses.
 
 ### Sample Records
 
