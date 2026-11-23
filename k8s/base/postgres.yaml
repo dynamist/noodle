@@ -29,7 +29,7 @@ spec:
         # A major version cannot read the data of another, say so instead of
         # failing on start. `make deploy` replaces both images with PG
         - name: check-version
-          image: postgres:17
+          image: postgres:19
           command:
             - sh
             - -c
@@ -55,7 +55,7 @@ spec:
       containers:
         - name: postgres
           # The default PostgreSQL, `make deploy` replaces the tag with PG
-          image: postgres:17
+          image: postgres:19
           env:
             # Do not pre-create the Odoo database, init-odoo.sh creates it
             - name: POSTGRES_DB
