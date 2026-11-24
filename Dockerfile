@@ -10,7 +10,7 @@ ARG BASE=release-20
 ARG NIGHTLY_BASE=release-20
 
 FROM odoo:19.0-20261102 AS release-19
-FROM odoo:20.0-20260926 AS release-20
+FROM odoo:20.0-20261123 AS release-20
 
 # The newest dated nightly deb of a series from nightly.odoo.com, installed over
 # the released image of that series (or the newest one), which brings the
