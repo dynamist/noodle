@@ -1,6 +1,6 @@
 [tools]
 # The pipx backend installs with `uv tool install`
-uv = "0.13.7"
+uv = "0.13.10"
 "pipx:odooly" = "2.6.9"
 k3d = "5.9.0"
 # Keep kubectl in lockstep with the k3s image in k8s/cluster/k3d.yaml (max ±1 minor).
