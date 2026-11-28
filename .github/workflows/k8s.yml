@@ -39,7 +39,7 @@ jobs:
       startsWith(github.event.label.name, 'ci:odoo-') || startsWith(github.event.label.name, 'ci:postgres-')
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+      - uses: jdx/mise-action@3277a0f272901982804abc53abd93520db809be4 # v5.4.0
       - run: make validate
 
   versions:
@@ -90,10 +90,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+      - uses: jdx/mise-action@3277a0f272901982804abc53abd93520db809be4 # v5.4.0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
 
       - name: Deploy
         run: make ci-deploy
@@ -146,12 +146,12 @@ jobs:
         with:
           path: self
 
-      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+      - uses: jdx/mise-action@3277a0f272901982804abc53abd93520db809be4 # v5.4.0
         with:
           working_directory: self
 
       - name: Install uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
 
       - name: Check out the other apps
         env:
